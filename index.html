@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RAS Ops</title>
+<style>
+:root{--bg:#0f1117;--bg2:#161b27;--bg3:#1e2535;--bg4:#252d3d;--border:#2a3348;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--accent:#3b82f6;--accent2:#1d4ed8;--success:#22c55e;--success-bg:#052e16;--warn:#f59e0b;--warn-bg:#451a03;--danger:#ef4444;--danger-bg:#450a0a;--radius:8px;--sidebar:220px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:13px}
+a{color:var(--accent);text-decoration:none}
+button{cursor:pointer;font-family:inherit;font-size:12px}
+input,select,textarea{font-family:inherit;font-size:13px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:var(--radius);padding:7px 10px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;color:var(--text3);padding:6px 10px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.05em}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text);font-size:12px}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg3)}
+.sidebar{width:var(--sidebar);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100}
+.logo{padding:18px 16px 12px;font-size:15px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);letter-spacing:-.3px}
+.logo span{color:var(--accent)}
+.nav-section{padding:10px 0 2px}
+.nav-label{font-size:10px;font-weight:600;color:var(--text3);padding:6px 16px 3px;text-transform:uppercase;letter-spacing:.08em}
+.ni{display:flex;align-items:center;gap:8px;padding:7px 16px;cursor:pointer;border-radius:0;transition:background .15s;color:var(--text2);font-size:12.5px;position:relative;border:none;background:none;width:100%;text-align:left}
+.ni:hover{background:var(--bg3);color:var(--text)}
+.ni.active{background:var(--bg4);color:var(--text);font-weight:600}
+.ni .ico{width:15px;text-align:center;opacity:.7}
+.ni.active .ico{opacity:1}
+.badge-pill{background:var(--accent2);color:#fff;font-size:10px;padding:1px 6px;border-radius:9px;margin-left:auto;font-weight:600}
+.badge-pill.warn{background:var(--warn-bg);color:var(--warn)}
+.badge-pill.ok{background:var(--success-bg);color:var(--success)}
+.main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50}
+#page-title{font-size:15px;font-weight:700;flex:1}
+.topbar-meta{font-size:11px;color:var(--text3)}
+#toast{position:fixed;bottom:24px;right:24px;background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:var(--radius);font-size:13px;opacity:0;transition:opacity .25s;z-index:999;pointer-events:none}
+#toast.show{opacity:1}
+.content{padding:24px;flex:1}
+.page{display:none}.page.active{display:block}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+.ch{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.ct{font-size:14px;font-weight:700}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:900px){.grid2,.grid3,.grid4{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+.met{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px}
+.ml{font-size:11px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
+.mv{font-size:28px;font-weight:700;color:var(--text)}
+.mv.d{color:var(--danger)}
+.mv.w{color:var(--warn)}
+.mv.s{color:var(--success)}
+.mv.a{color:var(--accent)}
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:2px 8px;border-radius:5px;white-space:nowrap}
+.bd{background:var(--danger-bg);color:var(--danger)}
+.bw{background:var(--warn-bg);color:var(--warn)}
+.bsu{background:var(--success-bg);color:var(--success)}
+.bi{background:#1e3a5f;color:#60a5fa}
+.bnn{background:var(--bg4);color:var(--text2)}
+.stat-row{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.bar-bg{flex:1;height:8px;background:var(--bg4);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .3s}
+.abtn{background:var(--bg4);border:1px solid var(--border);color:var(--text2);padding:4px 10px;border-radius:5px;font-size:11px;cursor:pointer;transition:background .15s}
+.abtn:hover{background:var(--bg3);color:var(--text)}
+.abtn.e{color:#60a5fa;border-color:#1e3a5f}
+.abtn.e:hover{background:#1e3a5f}
+.abtn.sl{color:var(--success);border-color:var(--success-bg)}
+.abtn.sl:hover{background:var(--success-bg)}
+.abtn.ns{color:var(--danger);border-color:var(--danger-bg)}
+.abtn.ns:hover{background:var(--danger-bg)}
+.empty{color:var(--text3);font-size:12px;padding:24px;text-align:center}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.filters input,.filters select{height:32px;font-size:12px;min-width:140px}
+.adv-tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
+.adv-tab{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:5px 14px;border-radius:var(--radius);cursor:pointer;font-size:12px;transition:background .15s}
+.adv-tab:hover{background:var(--bg4)}
+.adv-tab.active{background:var(--accent2);border-color:var(--accent);color:#fff;font-weight:600}
+.tcard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden}
+.tcard.tagged-email{border-left:3px solid var(--accent)}
+.tcard.tagged-slack{border-left:3px solid var(--success)}
+.tcard.tagged-nosend{border-left:3px solid var(--danger)}
+.tcard-hdr{display:flex;align-items:center;gap:6px;padding:10px 14px;cursor:pointer;user-select:none;flex-wrap:wrap}
+.tcard-hdr:hover{background:var(--bg3)}
+.tcard-type{font-size:12.5px;font-weight:600;color:var(--text)}
+.tcard-subj{font-size:11px;color:var(--text3);margin-left:auto;margin-right:4px;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tcard-body{display:none;padding:0 14px 14px}
+.tcard-body.open{display:block}
+.tfield{margin-bottom:12px}
+.tfield label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);display:block;margin-bottom:4px}
+.tv{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:12px;line-height:1.55;white-space:pre-wrap;color:var(--text)}
+.triage-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-top:4px}
+.triage-label{font-size:11px;color:var(--text3);margin-right:4px}
+.tbtn-email,.tbtn-slack,.tbtn-nosend,.clear-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:4px 11px;border-radius:5px;font-size:11px;cursor:pointer}
+.tbtn-email.active-tag{background:#1e3a5f;border-color:var(--accent);color:#60a5fa;font-weight:700}
+.tbtn-slack.active-tag{background:var(--success-bg);border-color:var(--success);color:var(--success);font-weight:700}
+.tbtn-nosend.active-tag{background:var(--danger-bg);border-color:var(--danger);color:var(--danger);font-weight:700}
+.clear-btn{color:var(--text3)}
+.acard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px}
+.acard-body{padding:12px 14px}
+.acard-title{font-size:13px;font-weight:600;margin-bottom:4px}
+.acard-meta{font-size:11px;color:var(--text3);margin-bottom:6px}
+.acard-btns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.cpill{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:4px 12px;border-radius:20px;cursor:pointer;font-size:12px;margin-right:4px;margin-bottom:6px;display:inline-block}
+.cpill.active,.cpill:hover{background:var(--accent2);border-color:var(--accent);color:#fff}
+.ci{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start}
+.cnum{min-width:28px;height:28px;border-radius:50%;background:var(--accent2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.cb p{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.5}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:560px;width:95%;max-height:85vh;overflow-y:auto}
+.modal h3{font-size:15px;font-weight:700;margin-bottom:16px}
+.modal-row{margin-bottom:12px}
+.modal-row label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);display:block;margin-bottom:4px}
+.modal-row input,.modal-row select,.modal-row textarea{width:100%}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.btn-primary{background:var(--accent);border:none;color:#fff;padding:7px 18px;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer}
+.btn-primary:hover{background:var(--accent2)}
+.btn-ghost{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:7px 16px;border-radius:var(--radius);font-size:13px;cursor:pointer}
+.imd-row{display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.imd-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);min-width:80px}
+.imd-val{font-size:12px;color:var(--text)}
+pre{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-size:11px;white-space:pre-wrap;overflow-x:auto;line-height:1.55;color:var(--text2)}
+.form-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.form-row>*{flex:1;min-width:130px}
+.section-title{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin:18px 0 10px}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="logo">RAS <span>Ops</span></div>
+  <div class="nav-section">
+    <div class="nav-label">Overview</div>
+    <button class="ni active" onclick="nav('dashboard',this)"><span class="ico">◈</span> Dashboard <span class="badge-pill" id="ib">0</span></button>
+    <button class="ni" onclick="nav('reports',this)"><span class="ico">↗</span> Reports & export</button>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Issues</div>
+    <button class="ni" onclick="nav('jira',this)"><span class="ico">⇪</span> Jira import</button>
+    <button class="ni" onclick="nav('issues',this)"><span class="ico">◉</span> Issues</button>
+    <button class="ni" onclick="nav('themes',this)"><span class="ico">◎</span> Themes & analysis</button>
+    <button class="ni" onclick="nav('challenges',this)"><span class="ico">⚑</span> Business challenges</button>
+    <button class="ni" onclick="nav('clients',this)"><span class="ico">◫</span> All clients</button>
+    <button class="ni" onclick="nav('mauritius',this)"><span class="ico">◈</span> Mauritius</button>
+    <button class="ni" onclick="nav('tickets',this)"><span class="ico">+</span> Ticket log</button>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Advisories <span class="badge-pill" id="ab" style="margin-left:4px">0</span></div>
+    <button class="ni" onclick="nav('advisories',this)"><span class="ico">☰</span> All advisories</button>
+    <button class="ni" onclick="nav('adv-email',this)"><span class="ico">✉</span> Via email <span class="badge-pill" id="nb-em">0</span></button>
+    <button class="ni" onclick="nav('adv-slack',this)"><span class="ico">⚡</span> Via Slack <span class="badge-pill ok" id="nb-sl">0</span></button>
+    <button class="ni" onclick="nav('adv-review',this)"><span class="ico">✕</span> Don't send <span class="badge-pill warn" id="nb-ns">0</span></button>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <span id="page-title">Dashboard</span>
+    <span class="topbar-meta" id="last-saved"></span>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="grid4" style="margin-bottom:16px">
+        <div class="met"><div class="ml">Total issues</div><div class="mv a" id="m-tot">0</div></div>
+        <div class="met"><div class="ml">Open / active</div><div class="mv d" id="m-open">0</div></div>
+        <div class="met"><div class="ml">Resolved</div><div class="mv s" id="m-res">0</div></div>
+        <div class="met"><div class="ml">High priority</div><div class="mv w" id="m-high">0</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="ch"><span class="ct">Open issues</span></div>
+          <div style="overflow-x:auto"><table><thead><tr><th>Key</th><th>Summary</th><th>Assignee</th><th>Status</th></tr></thead><tbody id="dash-open"></tbody></table></div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="ch"><span class="ct">Top themes</span></div>
+            <div id="dash-themes"></div>
+          </div>
+          <div class="card">
+            <div class="ch"><span class="ct">Advisory triage <span class="badge bi" id="a-tot">0</span></span></div>
+            <div id="dash-adv"></div>
+            <div style="margin-top:10px;font-size:11px;color:var(--text3)">Email: <strong id="a-em">0</strong> &nbsp; Slack: <strong id="a-sl">0</strong> &nbsp; Don't send: <strong id="a-ns">0</strong> &nbsp; Total: <strong id="m-adv">0</strong></div>
+          </div>
+          <div class="card">
+            <div class="ch"><span class="ct">By assignee</span></div>
+            <div id="dash-asgn"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JIRA IMPORT -->
+    <div class="page" id="page-jira">
+      <div class="card">
+        <div class="ch"><span class="ct">Import from Jira CSV</span></div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:14px">Export your Jira board as CSV and upload here. The app will detect column headers automatically.</p>
+        <input type="file" id="csv-file" accept=".csv" onchange="handleCSV(event)" style="margin-bottom:12px">
+        <div id="imp-status" style="font-size:12px;color:var(--text3);margin-top:6px"></div>
+        <div id="csv-prev-card" style="display:none;margin-top:14px">
+          <div style="font-size:12px;color:var(--text2);margin-bottom:8px" id="prev-cnt"></div>
+          <div style="overflow-x:auto"><table id="prev-tbl"></table></div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn-primary" onclick="confirmImport()">Import all rows</button>
+            <button class="btn-ghost" onclick="cancelImport()">Cancel</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="ct">Reset to sample data</span></div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Replace all issues with the built-in sample dataset (12 tickets).</p>
+        <button class="btn-ghost" onclick="resetToSample()">Reset to sample data</button>
+      </div>
+    </div>
+
+    <!-- ISSUES -->
+    <div class="page" id="page-issues">
+      <div class="filters">
+        <input id="fs" placeholder="Search..." oninput="renderIssues()">
+        <select id="fst" onchange="renderIssues()"><option value="">All statuses</option><option>Open</option><option>Resolved</option><option>Done</option><option>Under review</option><option>Under investigation</option><option>Waiting for support</option><option>Compliant</option></select>
+        <select id="fpr" onchange="renderIssues()"><option value="">All priorities</option><option>High</option><option>Medium</option><option>Low</option></select>
+        <select id="fcl" onchange="renderIssues()"></select>
+        <select id="fas" onchange="renderIssues()"></select>
+      </div>
+      <div style="overflow-x:auto"><table>
+        <thead><tr><th>Key</th><th>Summary</th><th>Assignee</th><th>Reporter</th><th>Client</th><th>Status</th><th>Priority</th><th>Type</th><th>Created</th><th></th></tr></thead>
+        <tbody id="issues-tbody"></tbody>
+      </table></div>
+      <div class="empty" id="issues-empty" style="display:none">No issues match your filters</div>
+    </div>
+
+    <!-- THEMES -->
+    <div class="page" id="page-themes">
+      <div class="grid2">
+        <div class="card"><div class="ch"><span class="ct">Issue themes</span></div><div id="t-themes"></div></div>
+        <div class="card"><div class="ch"><span class="ct">By assignee</span></div><div id="t-asgn"></div></div>
+        <div class="card"><div class="ch"><span class="ct">By issue type</span></div><div id="t-types"></div></div>
+        <div class="card"><div class="ch"><span class="ct">By status</span></div><div id="t-stats"></div></div>
+      </div>
+    </div>
+
+    <!-- CHALLENGES -->
+    <div class="page" id="page-challenges">
+      <div class="card">
+        <div class="ch"><span class="ct">Business challenges</span></div>
+        <div id="chall-list"></div>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="ct">Add your own challenge</span></div>
+        <div class="form-row">
+          <input id="cn" placeholder="Challenge description" style="flex:3">
+          <select id="ca"><option>People</option><option>Process</option><option>Technology</option><option>Data Quality</option><option>Communication</option></select>
+        </div>
+        <button class="btn-primary" onclick="addChallenge()">Add challenge</button>
+        <div id="manual-chall" style="margin-top:14px"></div>
+      </div>
+    </div>
+
+    <!-- CLIENTS -->
+    <div class="page" id="page-clients">
+      <div style="margin-bottom:14px" id="cpills"></div>
+      <div id="ctables"></div>
+    </div>
+
+    <!-- MAURITIUS -->
+    <div class="page" id="page-mauritius">
+      <div class="grid4" style="margin-bottom:16px" id="mu-met"></div>
+      <div class="grid2">
+        <div class="card">
+          <div class="ch"><span class="ct">Mauritius issues</span></div>
+          <div style="overflow-x:auto"><table>
+            <thead><tr><th>Summary</th><th>Assignee</th><th>Status</th><th>Priority</th><th>Created</th></tr></thead>
+            <tbody id="mu-tbody"></tbody>
+          </table></div>
+          <div class="empty" id="mu-empty" style="display:none">No Mauritius issues</div>
+        </div>
+        <div class="card">
+          <div class="ch"><span class="ct">Log Mauritius ticket</span></div>
+          <div class="form-row">
+            <input id="mu-s" placeholder="Summary" style="flex:3">
+          </div>
+          <div class="form-row">
+            <input id="mu-a" placeholder="Assignee">
+            <select id="mu-st"><option>Open</option><option>Under investigation</option><option>Resolved</option><option>Waiting for support</option></select>
+            <select id="mu-p"><option>High</option><option>Medium</option><option>Low</option></select>
+          </div>
+          <button class="btn-primary" onclick="addMuTicket()">Add ticket</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TICKETS -->
+    <div class="page" id="page-tickets">
+      <div class="card">
+        <div class="ch"><span class="ct">Log manual ticket</span></div>
+        <div class="form-row">
+          <input id="ts" placeholder="Summary" style="flex:3">
+          <input id="tc" placeholder="Client">
+          <input id="ta" placeholder="Assignee">
+        </div>
+        <div class="form-row">
+          <select id="tst"><option>Open</option><option>Under investigation</option><option>Resolved</option><option>Waiting for support</option><option>Compliant</option></select>
+          <select id="tp"><option>High</option><option>Medium</option><option>Low</option></select>
+          <input id="tn" placeholder="Notes (optional)">
+        </div>
+        <button class="btn-primary" onclick="addTicket()">Log ticket</button>
+      </div>
+      <div style="overflow-x:auto"><table>
+        <thead><tr><th>Summary</th><th>Client</th><th>Assignee</th><th>Status</th><th>Priority</th><th>Date</th><th>Notes</th></tr></thead>
+        <tbody id="t-tbody"></tbody>
+      </table></div>
+      <div class="empty" id="t-empty" style="display:none">No manual tickets logged yet</div>
+    </div>
+
+    <!-- ADVISORIES -->
+    <div class="page" id="page-advisories">
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <input id="adv-search" placeholder="Search templates..." style="flex:1;min-width:160px;height:32px" oninput="renderAdvTab()">
+        <select id="adv-filter-tag" style="height:32px" onchange="renderAdvTab()">
+          <option value="">All</option><option value="email">Email</option><option value="slack">Slack</option><option value="nosend">Don't send</option><option value="untagged">Untagged</option>
+        </select>
+        <button class="btn-primary" onclick="openNewAdv()">+ New advisory</button>
+      </div>
+      <div class="adv-tabs">
+        <button class="adv-tab active" onclick="switchAdvTab('uk',this)">UK Ops <span id="tc-uk"></span></button>
+        <button class="adv-tab" onclick="switchAdvTab('new',this)">New clients <span id="tc-new"></span></button>
+        <button class="adv-tab" onclick="switchAdvTab('mtc',this)">Mauritius MTC <span id="tc-mtc"></span></button>
+        <button class="adv-tab" onclick="switchAdvTab('custom',this)">Custom <span id="tc-custom"></span></button>
+      </div>
+      <div id="adv-tab-content"></div>
+    </div>
+
+    <!-- ADV-EMAIL -->
+    <div class="page" id="page-adv-email">
+      <div class="card"><div class="ch"><span class="ct">✉ Send via email</span><span class="badge bi" id="nb-em2">0</span></div><div id="em-list"></div></div>
+    </div>
+
+    <!-- ADV-SLACK -->
+    <div class="page" id="page-adv-slack">
+      <div class="card"><div class="ch"><span class="ct">⚡ Send via Slack</span><span class="badge bsu" id="nb-sl2">0</span></div><div id="sl-list"></div></div>
+    </div>
+
+    <!-- ADV-REVIEW -->
+    <div class="page" id="page-adv-review">
+      <div class="card"><div class="ch"><span class="ct">✕ Don't send</span><span class="badge bd" id="nb-ns2">0</span></div><div id="ns-list"></div></div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="page" id="page-reports">
+      <div class="grid4" style="margin-bottom:16px">
+        <div class="met"><div class="ml">Total</div><div class="mv a" id="r-tot">0</div></div>
+        <div class="met"><div class="ml">Open</div><div class="mv d" id="r-open">0</div></div>
+        <div class="met"><div class="ml">Resolved</div><div class="mv s" id="r-res">0</div></div>
+        <div class="met"><div class="ml">Tagged advs</div><div class="mv a" id="r-adv">0</div></div>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="ct">Stats snapshot</span>
+          <button class="abtn" onclick="copyStats()">Copy to clipboard</button>
+          <button class="abtn" onclick="exportIssues()" style="margin-left:4px">Export issues CSV</button>
+          <button class="abtn" onclick="exportTagged()" style="margin-left:4px">Export tagged advisories CSV</button>
+        </div>
+        <pre id="stats-prev"></pre>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<div id="toast"></div>
+
+<!-- Issue detail modal -->
+<div class="modal-overlay" id="issue-modal" onclick="if(event.target===this)closeIssueModal()">
+  <div class="modal">
+    <h3 id="im-title"></h3>
+    <div class="imd-row"><span class="imd-lbl">Key</span><span class="imd-val" id="im-key"></span></div>
+    <div class="imd-row"><span class="imd-lbl">Status</span><span id="im-status"></span></div>
+    <div class="imd-row"><span class="imd-lbl">Priority</span><span id="im-pri"></span></div>
+    <div class="imd-row"><span class="imd-lbl">Assignee</span><span class="imd-val" id="im-asgn"></span></div>
+    <div class="imd-row"><span class="imd-lbl">Reporter</span><span class="imd-val" id="im-rep"></span></div>
+    <div class="imd-row"><span class="imd-lbl">Labels</span><span id="im-labs"></span></div>
+    <div class="modal-footer"><button class="btn-ghost" onclick="closeIssueModal()">Close</button></div>
+  </div>
+</div>
+
+<!-- New advisory modal -->
+<div class="modal-overlay" id="new-adv-modal" onclick="if(event.target===this)closeNewAdv()">
+  <div class="modal">
+    <h3>New custom advisory</h3>
+    <div class="modal-row"><label>Title *</label><input id="na-t" placeholder="e.g. UK - Tote system outage"></div>
+    <div class="modal-row"><label>Category</label>
+      <select id="na-cat"><option>Maintenance</option><option>Price Feed</option><option>Settlement</option><option>Race Card</option><option>Results</option><option>Advisory</option><option>Other</option></select>
+    </div>
+    <div class="modal-row"><label>Client(s)</label><input id="na-cl" placeholder="e.g. UK Ops, Betbridge"></div>
+    <div class="modal-row"><label>Notes</label><textarea id="na-n" rows="3" placeholder="Any additional context..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeNewAdv()">Cancel</button>
+      <button class="btn-primary" onclick="saveCustomAdv()">Save advisory</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Sample data ─────────────────────────────────────────────────────────────
+const SAMPLE_ISSUES=[{id:"SUPRT-4042",summary:"Fairplay Runner Comments Issue - UK Comments Replaced by Australian Version",assignee:"Nipun Lahiru",reporter:"Nipun Lahiru",status:"Under review",priority:"High",client:"Betbridge",labels:["Betbridge","SupportRequest","UK_Ops_Impact"],issueType:"[System] Problem",created:"09/Jun/26 12:50 AM"},{id:"SUPRT-4040",summary:"Incorrect Price Transmission After Race Closure & Wrong Close Time Sent",assignee:"Linojan Chandrakumar",reporter:"Ashini DeSilva",status:"Open",priority:"Medium",client:"UK Ops",labels:["UK_Ops_Impact"],issueType:"[System] Problem",created:"08/Jun/26 5:35 PM"},{id:"SUPRT-4030",summary:"Dividends mismatching after a withdrawn - Altenar",assignee:"Vihanga Shamod",reporter:"Vihanga Shamod",status:"Resolved",priority:"High",client:"UK Ops",labels:["SupportRequest","UK_Ops_Impact"],issueType:"[System] Service request",created:"07/Jun/26 3:36 AM"},{id:"SUPRT-4023",summary:"Missing bookmakers in Trader - Towcester R13",assignee:"Sean Miller",reporter:"Ravindu Dilshan",status:"Open",priority:"Medium",client:"UK Ops",labels:["UK_Ops_Impact"],issueType:"[System] Problem",created:"06/Jun/26 2:52 AM"},{id:"SUPRT-4011",summary:"Missing USA Meetings on PlayBook Trading Console",assignee:"Nimesh Liyanage",reporter:"Vihanga Shamod",status:"Resolved",priority:"High",client:"UK Ops",labels:["SupportRequest","UK_Ops_Impact"],issueType:"[System] Service request",created:"03/Jun/26 4:43 AM"},{id:"SUPRT-4010",summary:"Missing competitor prices for NEWTTON ABBOT R3",assignee:"Kishan Jeetun",reporter:"Vihanga Shamod",status:"Resolved",priority:"High",client:"UK Ops",labels:["SupportRequest","UK_Ops_Impact"],issueType:"[System] Service request",created:"03/Jun/26 4:01 AM"},{id:"SUPRT-3997",summary:"RCA Investigation - Race Cards Not Delivered Due to Meeting Mapping/Configuration Issue",assignee:"Benji Marshall",reporter:"Vihanga Shamod",status:"Resolved",priority:"Medium",client:"UK Ops",labels:["SupportRequest","UK_Ops_Impact"],issueType:"[System] Service request",created:"01/Jun/26 5:14 AM"},{id:"SUPRT-3992",summary:"Settlement Odds Correction - Nancy 12:00 UTC (29/05/2026)",assignee:"Alex Ashton",reporter:"Vihanga Shamod",status:"Resolved",priority:"Medium",client:"UK Ops",labels:["SupportRequest","UK_Ops_Impact"],issueType:"[System] Service request",created:"31/May/26 3:40 AM"},{id:"SUPRT-3986",summary:"Investigation Required: Incorrect pricing for Laurel Race 5 - WSB",assignee:"Linojan Chandrakumar",reporter:"Vihanga Shamod",status:"Waiting for support",priority:"High",client:"UK Ops",labels:["SupportRequest","UK_Ops_Impact"],issueType:"[System] Service request",created:"30/May/26 5:21 AM"},{id:"SUPRT-3982",summary:"Review Required, Incorrect Insure 4 Market Creation (Prag and Quin)",assignee:"Nimesh Liyanage",reporter:"Dhanushka dilhan",status:"Compliant",priority:"Medium",client:"UK Ops",labels:["Mid-Term","UK_Ops_Impact","UK-Project-Priority"],issueType:"[System] Problem",created:"29/May/26 8:20 PM"},{id:"SUPRT-3971",summary:"Fairplay Bets Not Settled - R5 Towcester",assignee:"Linojan Chandrakumar",reporter:"Nipun Lahiru",status:"Under investigation",priority:"Medium",client:"UK Ops",labels:["SupportRequest","UK_Ops_Impact"],issueType:"[System] Problem",created:"27/May/26 10:25 PM"},{id:"MTS-354",summary:"No USA - T Derivatives for Swifty [Prod]",assignee:"Nimesh Liyanage",reporter:"Paul Rigby",status:"Done",priority:"High",client:"UK Ops",labels:["Immediate","UK_Ops_Impact","UK-Project-Priority"],issueType:"Story",created:"10/Jun/26 8:24 AM"}];
+
+const TEMPLATES={uk:[{type:"Production Endpoint Down",subject:"[Client Name] - Production Endpoint Down",body:"Hi,\n\nWe are currently unable to deliver prices and status updates to your production endpoint. Could you please review and confirm that everything is functioning correctly on your side?\n\nEndpoint(s) affected: [[PASTE ENDPOINT/S HERE]]\nCountry / Discipline / Meeting / Race Number: [[PASTE DETAILS HERE]]\n\nPlease reply once the issue has been resolved. Thank you."},{type:"Abandoned Race/s",subject:"Abandoned Race/s - [Track Name/Race No./Date]",body:"Please be advised that Race/Races [[RACE_NUMBERS]] at [Track/Country] (Discipline) [DATE] has been abandoned.\n\nThis follows official confirmation.\n\nAll downstream systems, including the Trader, will reflect this status."},{type:"Abandoned Meeting",subject:"Abandoned Meeting - [Track Name/Date]",body:"Please be advised that the meeting at [Track/Country] (Discipline) on [DATE] has been abandoned due to [[REASON]].\n\nThis follows official confirmation.\n\nAll downstream systems, including the Trader, will reflect this status."},{type:"Transferred Meeting",subject:"Transferred Meeting - [Track Name/Date]",body:"Please be advised that the [Track/Country] (Discipline) meeting on [DATE] has been transferred to [[NEW_VENUE]] on [[NEW_DATE]].\n\nThis follows confirmation from Official Sources.\n\nThe Trader will show the original venue as 'Abandoned'."},{type:"Price Feed Issue - Initial",subject:"Price Feed Issues",body:"Please be advised that we are experiencing a price update issue at (Discipline)- [Track/Race] on [DATE].\n\nOur team is working to resolve this issue. We will provide an update ASAP.\n\nApologies for any inconvenience caused."},{type:"Price Feed Issue - Follow Up",subject:"Price Feed Issues - Follow Up",body:"Please be advised that our team is still working on the price update issue at [Track/Race/Date].\n\nWe appreciate your patience in this matter, we will provide further updates ASAP."},{type:"Price Feed Issue - Final",subject:"Price Feed Issue - [Status - Resolved/Escalated]",body:"Please be advised that the price update issue at [Track/Race] on [Date] has now been resolved.\n\nPlease contact raceday@racingandsports.com if you are still experiencing issues."},{type:"Supplier Feeds - Data Request",subject:"Data Request - [Track/Date]",body:"Please be advised that we have not received [FILE TYPE/S] for [MEETING] (Discipline) / [RACE_NUMBERS] on [DATE] from you.\n\nIf you could please have these sent to us, that would be much appreciated.\n\nThank you."},{type:"Supplier Feeds - Vision Request",subject:"Request for Vision for [Track]",body:"We have noticed that the vision for [Meeting] is currently unavailable. Could you please enable access to this at your earliest convenience?\n\nThank you for your prompt attention to this matter."},{type:"Results-Only Fixtures",subject:"Upcoming Results-Only Fixtures",body:"The Greyhound fixture(s) at [[TRACK NAME/S]] on [[DATE/S]], will be a results-only fixture(s). Races will close at the scheduled off times, with results provided when available."},{type:"Change Advisory - Scheduled Update",subject:"[ADVISORY] - Scheduled Update",body:"Hi,\n\nPlease be advised that we will be introducing an additional field to your JSON [[SPECIFY_TYPE]] Payload.\n\nDate & Time AEST:\nNature of Outage:\nExpected Downtime:\nAffected Services:\nSeverity of Impact:"},{type:"Change Advisory - Redraw",subject:"[ADVISORY] - Redraw",body:"Please be advised that there has been a redraw for the [Track] (Discipline) meeting.\n\nPrevious MeetingID: [[OLD MEETING ID]]\nUpdated MeetingID: [[NEW MEETING ID]]\n\nUpdated files will be sent with the new MeetingID.\n\nContact raceday@racingandsports.com if you have any issues."},{type:"Change Advisory - Reserve Runner",subject:"Reserve Runner",body:"Please note that in/at [Track/Country] [Discipline] on [Date], the below reserve runner was added, and a new racecard has been sent.\n\n[[RACE_NUMBERS]] [[RUNNER # - RUNNER'S NAME]]\n\nThis follows official confirmation, and the Trader will reflect this information."},{type:"Change Advisory - Late Withdrawal",subject:"Late Withdrawal",body:"Please note there has been a late withdrawal in the [[SCHEDULED_RACE_TIME]] at [Track/Country/Discipline] - [[RACE_NUMBERS]]\n\n[[TRAP #]] [[RUNNER'S NAME]] has been withdrawn and the trap is now vacant."},{type:"Change Advisory - Void Race",subject:"Void Race",body:"Please be advised that [[RACE_NUMBERS]] at [Track/Country/Discipline] has been declared void.\n\nThis follows official confirmation.\n\nThe Trader will reflect this information."},{type:"Maintenance - Unexpected",subject:"Trader Down",body:"We are currently experiencing an issue affecting the Trader.\n\nImpact: [[DETAILS]]\nStatus: Under investigation\n\nFurther updates will be provided as more information becomes available."},{type:"Maintenance - Scheduled",subject:"Scheduled Maintenance",body:"Please be advised that we are undergoing a scheduled [[TYPE_OF]].\n\nDate & Time AEST:\nNature of Outage:\nExpected Downtime:\nAffected Services:\nSeverity of Impact:"},{type:"Delay - Official Results",subject:"Official Results Delay",body:"Please be advised that there is a delay from official sources for the Full Results for [[RACE_NUMBERS]] at [Track/Discipline] meeting on [Date], Trader Meeting ID: [INSERT].\n\nAn update will follow when available.\n\nWe appreciate your patience."},{type:"Delay - Race Delay",subject:"Race Delay",body:"Please note that there is currently a delay at [Meeting/Country/Discipline] - [[RACE_NUMBERS]] due to an issue with [[ISSUE_FACT]]."},{type:"Amendments - Incorrect Placings (RAS Error)",subject:"Incorrect Placings Amendment",body:"Please note that due to [[REASON]], we have sent you incorrect placings for [Meeting/Country/Discipline] on [Date].\n\nIncorrect placing initially sent: [[INITIAL_PLACING]]\nCorrect placing: [[CORRECT_PLACING]]\n\nWe apologise for the inconvenience caused."},{type:"Amendments - Notification of Correction",subject:"Notification of Correction",body:"Due to an external error, we have posted the incorrect placings for [[RACE_NUMBERS]] at [Meeting/Country/Discipline] on [Date].\n\nIncorrect placings: [[INCORRECT_PLACINGS]]\nCorrect placings: [[CORRECT_PLACING]]\n\nWe have corrected and re-sent the results."},{type:"Incident Report - Delayed Files",subject:"Delayed Files from RAS",body:"Please be advised that we are experiencing internal delays in transferring the [[FILE TYPE]] for [Meeting/Country/Discipline] on [Date] to you.\n\nWe will endeavour to send the files to you as soon as possible, and we apologise for any inconvenience caused."},{type:"Incident Report - RAS Incident Report",subject:"Racing and Sports Incident Report",body:"Reported by: [Insert trader name]\nSeverity: Critical / Urgent / High / Medium / Low\nInitial Time of Report: [Issue first reported]\nTime of Resolution: [When resolved]\n\nError Description: [Insert description]\nImpact: [Who was impacted]\nRoot Cause: [The identified cause]\nResolution: [How it was resolved]"},{type:"RBHQ Data Posting Error",subject:"Unsuccessful Posting of Data to Stake",body:"Please be advised that we have received error/s from your endpoint.\n\nStatus Code: [[e.g. 400]]\n\nPosting of the data to you from Stake was unsuccessful. Can you please check as a matter of priority and update the following JIRA Ticket: [[COPY JIRA TICKET URL HERE]]"},{type:"Scratched Runner",subject:"Scratched Runner",body:"Please note that [[RUNNER]] in [[RACE_NUMBERS]] at [Meeting/Country/Discipline/Date] has been declared a non-runner. This follows official confirmation, and the Trader will reflect this information."},{type:"Re-Instated Runner",subject:"Re-Instated Runner",body:"Please note that [[RUNNER]] in [[RACE_NUMBERS]] at [Meeting/Country/Discipline/Date] has been re-instated as a runner. This follows official confirmation, and the Trader will reflect this information."},{type:"Feed Issue - Internal",subject:"Feed Issue (Internal)",body:"Please be advised that we are currently unable to provide [[CONTENT]] for [[RACE_NUMBERS]] at [Meeting/Country/Discipline/Date].\n\nWe are investigating the issue as a priority and will advise accordingly when the matter is resolved.\n\nWe apologise for any inconvenience caused."},{type:"Feed Issue - Supplier",subject:"Feed Issue (Supplier)",body:"Due to a supplier feed issue, we are unable to provide [[CONTENT]] for [[RACE_NUMBERS]] at [Meeting/Country/Discipline/Date]. We will advise you when the feed has resumed."}],new:[{type:"Degraded Performance - Warning",subject:"Elevated Latency Detected",body:"Dear [Client Name],\n\nWe are currently observing elevated latency affecting [Service Name].\n\nImpact: You may experience slower-than-normal data delivery and delayed updates.\n\nOur engineering team is actively monitoring the situation. We will provide further updates should conditions change."},{type:"Latency Advisory",subject:"Increased Data Latency - [Service Name]",body:"Dear [Client Name],\n\nWe are currently experiencing increased latency across [Service Name].\n\nImpact: Data updates may be delayed beyond normal service levels.\n\nOur team is actively working to restore optimal performance."},{type:"Missing Fields / Partial Data",subject:"Partial Data Availability - [Feed/Event]",body:"Dear [Client Name],\n\nWe are currently experiencing incomplete data delivery for [Feed/Event].\n\nImpact: Certain fields may be missing or unavailable.\n\nOur team is investigating and working to restore full data integrity."},{type:"Photo Finish / Steward Review Delay",subject:"Result Delay - Steward Review in Progress",body:"Dear [Client Name],\n\nOfficial results are currently delayed due to a [steward review/photo finish.]\n\nWe will distribute confirmed results once finalised."},{type:"Dead Heat Notification",subject:"Dead Heat Declared - [Race]",body:"Dear [Client Name],\n\nA dead heat has been declared for [Race].\n\nResults and dividends reflect this outcome."},{type:"Race Re-Run",subject:"Race Re-Run - [Race]",body:"Dear [Client Name],\n\n[Race] has been declared void and will be re-run.\n\nUpdated race details will follow."},{type:"Walkover / Non-Contest",subject:"Walkover Declared - [Race]",body:"Dear [Client Name],\n\n[Race] has been declared a walkover/non-contest.\n\nPlease update systems accordingly."}],mtc:[{type:"Abandoned Race/s",subject:"Abandoned Race/s - [Track Name/Race No./Date]",who:"MTCJC",body:"Please be advised that Race/Races [[RACE_NUMBERS]] at [Track/Country] (Discipline) [DATE] has been abandoned.\n\nThis follows official confirmation.\n\nThe Trader will reflect this information.",example:"Race 1 at Champ De Mars on 13th September has been abandoned. This follows official confirmation."},{type:"Abandoned Meeting",subject:"Abandoned Meeting - [Track Name/Date]",who:"MTCJC",body:"Please be advised that the meeting at [Track/Country] (Discipline) on [DATE] has been abandoned due to [[REASON]].\n\nThis follows official confirmation.\n\nThe Trader will reflect this information.",example:""},{type:"Price Feed Issue - Initial",subject:"Price Feed Issues",who:"SL",body:"Please be advised that we are experiencing a price update issue at (Discipline)- [Track/Race] on [DATE].\n\nOur team is working to resolve this issue. We will provide an update ASAP.\n\nApologies for any inconvenience caused.",example:"Price update issue at Champ De Mars, Race 3 on 21st December."},{type:"Price Feed Issue - Follow Up",subject:"Price Feed Issues - Follow Up",who:"SL",body:"Please be advised that our team is still working on the price update issue at [Track/Race/Date].\n\nWe appreciate your patience in this matter, we will provide further updates ASAP.",example:""},{type:"Price Feed Issue - Final",subject:"Price Feed Issue - [Status - Resolved/Escalated]",who:"SL",body:"Please be advised that the price update issue at [Track/Race] on [Date] has now been resolved.\n\nPlease contact raceday@racingandsports.com if you are still experiencing issues.",example:""},{type:"Vision Request",subject:"Request for Vision for [Track]",who:"SL",body:"We have noticed that the vision for [Meeting] is currently unavailable. Could you please investigate?\n\nThank you for your prompt attention to this matter. We appreciate your assistance.",example:"Vision for Champ De Mars, Mauritius is currently unavailable."},{type:"Official Results Delay",subject:"Official Results Delay",who:"SL",body:"Please be advised that there is a delay from official sources for the Full Results for [[RACE_NUMBERS]] at [Track/Discipline] meeting on [Date], Trader Meeting ID: [INSERT].\n\nAn update will follow when available.",example:""},{type:"Race Delay",subject:"Race Delay",who:"MTCJC",body:"Please note that there is currently a delay at [Meeting/Country/Discipline] - [[RACE_NUMBERS]] due to an issue with [[ISSUE_FACT]].",example:""},{type:"Scratched Runner",subject:"Scratched Runner",who:"MTCJC",body:"Please note that [[RUNNER]] in [[RACE_NUMBERS]] at [Meeting/Date] has been declared a non-runner. This follows official confirmation, and the Trader will reflect this information.",example:""},{type:"Re-Instated Runner",subject:"Re-Instated Runner",who:"MTCJC",body:"Please note that [[RUNNER]] in [[RACE_NUMBERS]] at [MeetingDate] has been re-instated as a runner. This follows official confirmation, and the Trader will reflect this information.",example:"Phar Lap in Race 1 at Champ De Mars has been re-instated as a runner."},{type:"Jockey Change",subject:"Jockey Change",who:"MTCJC",body:"[Jockey change details for [Race] at [Meeting/Date]]",example:""}]};
+
+// ─── Persistence ─────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'ras_ops_v1';
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      issues: state.issues,
+      tags: state.tags,
+      customAdvs: state.customAdvs,
+      manualTickets: state.manualTickets,
+      muManual: state.muManual,
+      manualChallenges: state.manualChallenges,
+      savedAt: Date.now()
+    }));
+    const el = document.getElementById('last-saved');
+    if (el) el.textContent = 'Saved ' + new Date().toLocaleTimeString();
+  } catch(e) {}
+}
+
+// ─── State ───────────────────────────────────────────────────────────────────
+const saved = loadState();
+const state = {
+  issues: saved ? saved.issues : [...SAMPLE_ISSUES],
+  tags: saved ? saved.tags : {},
+  customAdvs: saved ? saved.customAdvs : [],
+  manualTickets: saved ? saved.manualTickets : [],
+  muManual: saved ? saved.muManual : [],
+  manualChallenges: saved ? saved.manualChallenges : [],
+  csvHeaders: [],
+  csvPending: [],
+  openTpl: null,
+  activeAdvTab: 'uk',
+  currentIssue: null
+};
+
+// Show last saved time on load
+if (saved && saved.savedAt) {
+  setTimeout(() => {
+    const el = document.getElementById('last-saved');
+    if (el) el.textContent = 'Last saved ' + new Date(saved.savedAt).toLocaleString();
+  }, 0);
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+const TITLES={dashboard:'Dashboard',jira:'Jira import',issues:'Issues',themes:'Themes & analysis',challenges:'Business challenges',clients:'All clients',mauritius:'Mauritius',tickets:'Ticket log',advisories:'All advisories','adv-email':'Via email','adv-slack':'Via Slack','adv-review':"Don't send",reports:'Reports & export'};
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+
+function nav(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  const pg=document.getElementById('page-'+id);
+  if(pg)pg.classList.add('active');
+  if(el)el.classList.add('active');
+  else document.querySelectorAll('.ni').forEach(n=>{if((n.getAttribute('onclick')||'').includes("'"+id+"'"))n.classList.add('active');});
+  document.getElementById('page-title').textContent=TITLES[id]||id;
+  ({dashboard:renderDashboard,issues:renderIssues,themes:renderThemes,challenges:renderChallenges,clients:renderClients,mauritius:renderMauritius,tickets:renderTickets,advisories:renderAdvPage,reports:renderReports}[id]||(() => {}))();
+  if(id==='adv-email')renderTaggedPage('email','em-list');
+  if(id==='adv-slack')renderTaggedPage('slack','sl-list');
+  if(id==='adv-review')renderTaggedPage('nosend','ns-list');
+}
+
+function sb(s){if(!s)return'<span class="badge bnn">-</span>';const sl=s.toLowerCase();if(sl==='open')return`<span class="badge bd">${s}</span>`;if(['progress','review','investigation','waiting'].some(k=>sl.includes(k)))return`<span class="badge bw">${s}</span>`;if(['resolved','done','compliant'].some(k=>sl===k))return`<span class="badge bsu">${s}</span>`;return`<span class="badge bnn">${s}</span>`;}
+function pb(p){if(!p)return'';const pl=p.toLowerCase();return pl==='high'?`<span class="badge bd">${p}</span>`:pl==='medium'?`<span class="badge bw">${p}</span>`:`<span class="badge bnn">${p}</span>`;}
+function allIssues(){return[...state.issues,...state.muManual.map(t=>({...t,client:'Mauritius'})),...state.manualTickets];}
+function tagKey(tab,type){return`${tab}::${type}`;}
+
+function setTag(tab,type,tag){
+  state.tags[tagKey(tab,type)]=tag;
+  saveState();
+  updateCounts();
+  renderAdvTab();
+}
+function getTag(tab,type){return state.tags[tagKey(tab,type)]||null;}
+
+function updateCounts(){
+  const all=allIssues();
+  const open=all.filter(i=>!['resolved','done','compliant'].includes((i.status||'').toLowerCase()));
+  document.getElementById('ib').textContent=open.length;
+  const tv=Object.values(state.tags).filter(Boolean);
+  const em=tv.filter(t=>t==='email').length+state.customAdvs.filter(a=>a.tag==='email').length;
+  const sl=tv.filter(t=>t==='slack').length+state.customAdvs.filter(a=>a.tag==='slack').length;
+  const ns=tv.filter(t=>t==='nosend').length+state.customAdvs.filter(a=>a.tag==='nosend').length;
+  const tot=em+sl+ns;
+  ['ab','a-tot'].forEach(id=>document.getElementById(id).textContent=tot);
+  document.getElementById('nb-em').textContent=em;
+  document.getElementById('a-em').textContent=em;
+  document.getElementById('nb-sl').textContent=sl;
+  document.getElementById('a-sl').textContent=sl;
+  document.getElementById('nb-ns').textContent=ns;
+  document.getElementById('a-ns').textContent=ns;
+  document.getElementById('m-tot').textContent=all.length;
+  document.getElementById('m-open').textContent=open.length;
+  document.getElementById('m-res').textContent=all.length-open.length;
+  document.getElementById('m-high').textContent=all.filter(i=>['high','critical'].includes((i.priority||'').toLowerCase())).length;
+  document.getElementById('m-adv').textContent=tot;
+}
+
+function getThemes(issues){const kw={'Pricing':['price','pricing','odds','transmission','close time'],'Settlement':['settle','settlement','dividend','result','placing','correction'],'Data / feed':['data','feed','missing','content','partial'],'Race cards':['racecard','race card','card','meeting','mapping','configuration'],'Trader':['trader','trading','console','playbook'],'Fairplay':['fairplay','fair play'],'Market creation':['market','insure','derivative'],'Betbridge':['betbridge']};const c={};Object.keys(kw).forEach(t=>c[t]=0);issues.forEach(i=>{const txt=(i.summary+' '+(i.description||'')).toLowerCase();Object.entries(kw).forEach(([t,ks])=>{if(ks.some(k=>txt.includes(k)))c[t]++;});});return Object.entries(c).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);}
+function bars(data){if(!data.length)return'<div class="empty" style="padding:12px">No data</div>';const max=data[0][1]||1;return data.map(([l,c])=>`<div class="stat-row"><span style="font-size:12px;min-width:130px;color:var(--text)">${l}</span><div class="bar-bg"><div class="bar-fill" style="width:${Math.round(c/max*100)}%"></div></div><span style="font-size:12px;color:var(--text2);min-width:20px;text-align:right">${c}</span></div>`).join('');}
+
+// ─── Dashboard ───────────────────────────────────────────────────────────────
+function renderDashboard(){
+  updateCounts();
+  const all=allIssues();
+  const open=all.filter(i=>!['resolved','done','compliant'].includes((i.status||'').toLowerCase()));
+  document.getElementById('dash-open').innerHTML=open.map(i=>`<tr><td style="font-family:monospace;font-size:11px">${i.id}</td><td style="max-width:180px">${i.summary.substring(0,46)}...</td><td style="font-size:11px">${i.assignee||'-'}</td><td>${sb(i.status)}</td></tr>`).join('');
+  const a={};all.forEach(i=>{const k=i.assignee||'Unassigned';a[k]=(a[k]||0)+1;});
+  document.getElementById('dash-asgn').innerHTML=bars(Object.entries(a).sort((a,b)=>b[1]-a[1]));
+  document.getElementById('dash-themes').innerHTML=getThemes(all).slice(0,5).map(([t,c])=>`<span class="badge bi" style="font-size:12px;padding:4px 11px">${t} <strong style="margin-left:4px">${c}</strong></span>`).join('');
+  const tv=Object.values(state.tags).filter(Boolean);
+  const tot=tv.length;
+  const advEl=document.getElementById('dash-adv');
+  if(tot){const em=tv.filter(t=>t==='email').length;const sl=tv.filter(t=>t==='slack').length;const ns=tv.filter(t=>t==='nosend').length;advEl.innerHTML=[['Email',em,'bi'],['Slack',sl,'bsu'],["Don't send",ns,'bd']].filter(r=>r[1]>0).map(([ch,c,b])=>`<div class="stat-row"><span class="badge ${b}" style="min-width:76px;justify-content:center">${ch}</span><div class="bar-bg" style="margin:0 10px"><div class="bar-fill" style="width:${Math.round(c/tot*100)}%"></div></div><span style="font-weight:600">${c}</span></div>`).join('');}
+  else advEl.innerHTML='<div class="empty" style="padding:14px">No advisories tagged yet - go to All Advisories to triage your templates</div>';
+}
+
+// ─── Issues ───────────────────────────────────────────────────────────────────
+function renderIssues(){
+  const all=allIssues();
+  const clients=[...new Set(all.map(i=>(i.client||'').trim()).filter(Boolean))].sort();
+  const assignees=[...new Set(all.map(i=>(i.assignee||'').trim()).filter(Boolean))].sort();
+  document.getElementById('fcl').innerHTML='<option value="">All clients</option>'+clients.map(c=>`<option>${c}</option>`).join('');
+  document.getElementById('fas').innerHTML='<option value="">All assignees</option>'+assignees.map(a=>`<option>${a}</option>`).join('');
+  const s=(document.getElementById('fs').value||'').toLowerCase();
+  const fst=(document.getElementById('fst').value||'').toLowerCase();
+  const fpr=(document.getElementById('fpr').value||'').toLowerCase();
+  const fcl=(document.getElementById('fcl').value||'').toLowerCase();
+  const fas=(document.getElementById('fas').value||'').toLowerCase();
+  const f=all.filter(i=>{
+    if(s&&!(i.summary+i.assignee+i.id+(i.client||'')+(i.reporter||'')).toLowerCase().includes(s))return false;
+    if(fst&&(i.status||'').toLowerCase()!==fst)return false;
+    if(fpr&&(i.priority||'').toLowerCase()!==fpr)return false;
+    if(fcl&&(i.client||'').toLowerCase()!==fcl)return false;
+    if(fas&&(i.assignee||'').toLowerCase()!==fas)return false;
+    return true;
+  });
+  const tbody=document.getElementById('issues-tbody');
+  const empty=document.getElementById('issues-empty');
+  if(!f.length){tbody.innerHTML='';empty.style.display='';return;}
+  empty.style.display='none';
+  tbody.innerHTML=f.map((iss,idx)=>`<tr><td style="font-family:monospace;font-size:11px;white-space:nowrap">${iss.id}</td><td style="max-width:200px">${iss.summary.substring(0,55)}${iss.summary.length>55?'...':''}</td><td style="font-size:12px">${iss.assignee||'-'}</td><td style="font-size:12px">${iss.reporter||'-'}</td><td>${iss.client?`<span class="badge bi">${iss.client}</span>`:'-'}</td><td>${sb(iss.status)}</td><td>${pb(iss.priority)}</td><td style="font-size:11px;color:var(--text2)">${(iss.issueType||'').replace('[System] ','')}</td><td style="font-size:11px;color:var(--text3);white-space:nowrap">${(iss.created||'').substring(0,12)}</td><td><button class="abtn" onclick="openIssueModal(${idx})">Detail</button></td></tr>`).join('');
+}
+
+function openIssueModal(idx){const i=allIssues()[idx];if(!i)return;state.currentIssue=i;document.getElementById('im-title').textContent=i.summary;document.getElementById('im-key').textContent=i.id;document.getElementById('im-status').innerHTML=sb(i.status);document.getElementById('im-pri').innerHTML=pb(i.priority);document.getElementById('im-asgn').textContent=i.assignee||'-';document.getElementById('im-rep').textContent=i.reporter||'-';document.getElementById('im-labs').innerHTML=(i.labels||[]).map(l=>`<span class="badge bnn" style="margin-right:2px">${l}</span>`).join('');document.getElementById('issue-modal').classList.add('open');}
+function closeIssueModal(){document.getElementById('issue-modal').classList.remove('open');}
+
+// ─── Themes ───────────────────────────────────────────────────────────────────
+function renderThemes(){
+  const all=allIssues();
+  document.getElementById('t-themes').innerHTML=bars(getThemes(all));
+  const a={};all.forEach(i=>{const k=i.assignee||'Unassigned';a[k]=(a[k]||0)+1;});
+  document.getElementById('t-asgn').innerHTML=bars(Object.entries(a).sort((a,b)=>b[1]-a[1]));
+  const t={};all.forEach(i=>{const k=(i.issueType||'Unknown').replace('[System] ','');t[k]=(t[k]||0)+1;});
+  document.getElementById('t-types').innerHTML=bars(Object.entries(t).sort((a,b)=>b[1]-a[1]));
+  const s={};all.forEach(i=>{const k=i.status||'Unknown';s[k]=(s[k]||0)+1;});
+  document.getElementById('t-stats').innerHTML=bars(Object.entries(s).sort((a,b)=>b[1]-a[1]));
+}
+
+// ─── Challenges ───────────────────────────────────────────────────────────────
+function renderChallenges(){
+  const all=allIssues();
+  const open=all.filter(i=>!['resolved','done','compliant'].includes((i.status||'').toLowerCase()));
+  const cc=[{title:'Pricing integrity is the dominant theme',area:'Data Quality',body:'Pricing errors appear across multiple tickets. Push for automated price validation before data is distributed.'},{title:`${open.length} of ${all.length} issues remain open or active`,area:'Process',body:'Over half of logged incidents are unresolved. Challenge the business to set formal SLAs per priority.'},{title:'Linojan Chandrakumar holds 3 open tickets - workload risk',area:'People',body:'Three issues assigned to one team member. Ensure workload is balanced and an escalation path exists.'},{title:'Fairplay has two separate incidents - systemic risk',area:'Technology',body:'Both runner comments and bet settlement failures suggest Fairplay needs a dedicated stability review sprint.'},{title:'Race card delivery failure needs RCA follow-through',area:'Technology',body:'SUPRT-3997 covers race cards not delivered due to configuration. Ensure the RCA findings are actioned.'},{title:'Advisory volume too high - implement a tiered comms strategy',area:'Communication',body:'With 46 templates in use, over-communication is a real risk. Define Tier 1 (email), Tier 2 (Slack), Tier 3 (internal).'},{title:'UK-Project-Priority label inconsistently applied',area:'Process',body:'Only 2 of 12 tickets carry this label. Define criteria and apply consistently.'}];
+  document.getElementById('chall-list').innerHTML=cc.map((c,i)=>`<div class="ci"><div class="cnum">${i+1}</div><div class="cb"><strong>${c.title}</strong><p>${c.body}</p><span class="badge bi" style="margin-top:5px">${c.area}</span></div></div>`).join('');
+  document.getElementById('manual-chall').innerHTML=state.manualChallenges.map((c,i)=>`<div class="ci"><div class="cnum" style="background:var(--success-bg);color:var(--success)">${i+1}</div><div class="cb"><strong>${c.area}</strong><p>${c.n}</p><span style="font-size:11px;color:var(--text3)">${c.date}</span></div></div>`).join('');
+}
+
+function addChallenge(){
+  const n=document.getElementById('cn').value.trim();
+  if(!n)return;
+  state.manualChallenges.push({n,area:document.getElementById('ca').value,date:new Date().toLocaleDateString()});
+  document.getElementById('cn').value='';
+  saveState();
+  renderChallenges();
+  toast('Challenge added');
+}
+
+// ─── Clients ─────────────────────────────────────────────────────────────────
+function renderClients(){const all=allIssues();const clients=[...new Set(all.map(i=>(i.client||'Unknown').trim()))].sort();document.getElementById('cpills').innerHTML=`<span class="cpill active" onclick="filterClient('',this)">All clients</span>`+clients.map(c=>`<span class="cpill" onclick="filterClient('${c}',this)">${c}</span>`).join('');renderClientTable('');}
+function filterClient(c,el){document.querySelectorAll('.cpill').forEach(p=>p.classList.remove('active'));if(el)el.classList.add('active');renderClientTable(c);}
+function renderClientTable(client){const all=allIssues();const f=client?all.filter(i=>(i.client||'Unknown')===client):all;if(!f.length){document.getElementById('ctables').innerHTML='<div class="empty">No issues</div>';return;}const by=client?{[client]:f}:f.reduce((acc,i)=>{const c=i.client||'Unknown';acc[c]=acc[c]||[];acc[c].push(i);return acc;},{});document.getElementById('ctables').innerHTML=Object.entries(by).map(([c,issues])=>`<div class="card"><div class="ch"><span class="ct">${c}</span><span class="badge bi" style="margin-left:8px">${issues.length}</span></div><div style="overflow-x:auto"><table><thead><tr><th>Key</th><th>Summary</th><th>Assignee</th><th>Status</th><th>Priority</th></tr></thead><tbody>${issues.map(i=>`<tr><td style="font-family:monospace;font-size:11px">${i.id}</td><td style="max-width:200px">${i.summary.substring(0,52)}...</td><td style="font-size:12px">${i.assignee||'-'}</td><td>${sb(i.status)}</td><td>${pb(i.priority)}</td></tr>`).join('')}</tbody></table></div></div>`).join('');}
+
+// ─── Mauritius ────────────────────────────────────────────────────────────────
+function renderMauritius(){
+  const all=allIssues();
+  const mu=all.filter(i=>(i.client||'').toLowerCase().includes('mauritius'));
+  const open=mu.filter(i=>!['resolved','done','compliant'].includes((i.status||'').toLowerCase()));
+  document.getElementById('mu-met').innerHTML=`<div class="met"><div class="ml">Total</div><div class="mv">${mu.length}</div></div><div class="met"><div class="ml">Open</div><div class="mv d">${open.length}</div></div><div class="met"><div class="ml">Resolved</div><div class="mv s">${mu.length-open.length}</div></div><div class="met"><div class="ml">MTC templates</div><div class="mv a">${TEMPLATES.mtc.length}</div></div>`;
+  const tbody=document.getElementById('mu-tbody');
+  const empty=document.getElementById('mu-empty');
+  if(!mu.length){tbody.innerHTML='';empty.style.display='';return;}
+  empty.style.display='none';
+  tbody.innerHTML=mu.map(i=>`<tr><td style="max-width:220px">${i.summary}</td><td>${i.assignee||'-'}</td><td>${sb(i.status)}</td><td>${pb(i.priority)}</td><td style="font-size:11px;color:var(--text3)">${(i.created||'').substring(0,12)}</td></tr>`).join('');
+}
+
+function addMuTicket(){
+  const s=document.getElementById('mu-s').value.trim();
+  if(!s)return;
+  state.muManual.push({id:'MU-'+(Date.now()%10000),summary:s,assignee:document.getElementById('mu-a').value,status:document.getElementById('mu-st').value,priority:document.getElementById('mu-p').value,created:new Date().toLocaleDateString(),client:'Mauritius'});
+  document.getElementById('mu-s').value='';
+  document.getElementById('mu-a').value='';
+  saveState();
+  updateCounts();
+  renderMauritius();
+  toast('Mauritius ticket added');
+}
+
+// ─── Tickets ──────────────────────────────────────────────────────────────────
+function renderTickets(){
+  const tbody=document.getElementById('t-tbody');
+  const empty=document.getElementById('t-empty');
+  if(!state.manualTickets.length){tbody.innerHTML='';empty.style.display='';return;}
+  empty.style.display='none';
+  tbody.innerHTML=state.manualTickets.map(t=>`<tr><td>${t.summary}</td><td>${t.client||'-'}</td><td>${t.assignee||'-'}</td><td>${sb(t.status)}</td><td>${pb(t.priority)}</td><td style="font-size:11px">${t.date}</td><td style="font-size:12px;color:var(--text2)">${t.notes||'-'}</td></tr>`).join('');
+}
+
+function addTicket(){
+  const s=document.getElementById('ts').value.trim();
+  if(!s)return;
+  state.manualTickets.push({id:'MAN-'+(Date.now()%10000),summary:s,client:document.getElementById('tc').value,assignee:document.getElementById('ta').value,status:document.getElementById('tst').value,priority:document.getElementById('tp').value,notes:document.getElementById('tn').value,date:new Date().toLocaleDateString(),created:new Date().toLocaleDateString()});
+  ['ts','tc','ta','tn'].forEach(id=>document.getElementById(id).value='');
+  saveState();
+  updateCounts();
+  renderTickets();
+  toast('Ticket logged');
+}
+
+// ─── Advisories ───────────────────────────────────────────────────────────────
+function switchAdvTab(tab,el){document.querySelectorAll('.adv-tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');state.activeAdvTab=tab;renderAdvTab();}
+function renderAdvPage(){updateCounts();renderAdvTab();}
+function renderAdvTab(){
+  const tab=state.activeAdvTab;
+  const s=(document.getElementById('adv-search')||{value:''}).value.toLowerCase();
+  const ft=(document.getElementById('adv-filter-tag')||{value:''}).value;
+  const el=document.getElementById('adv-tab-content');
+  if(!el)return;
+  if(tab==='custom'){
+    const f=state.customAdvs.filter(a=>{if(s&&!(a.title+a.notes).toLowerCase().includes(s))return false;if(ft&&a.tag!==ft&&!(ft==='untagged'&&!a.tag))return false;return true;});
+    el.innerHTML=f.length?f.map(customAdvCard).join(''):'<div class="empty">No custom advisories yet - click "New advisory" above</div>';
+    document.getElementById('tc-custom').textContent=state.customAdvs.length;
+    return;
+  }
+  const templates=TEMPLATES[tab]||[];
+  const f=templates.filter(t=>{
+    if(s&&!(t.type+t.subject+(t.body||'')).toLowerCase().includes(s))return false;
+    const tag=getTag(tab,t.type);
+    if(ft==='untagged'&&tag)return false;
+    if(ft==='email'&&tag!=='email')return false;
+    if(ft==='slack'&&tag!=='slack')return false;
+    if(ft==='nosend'&&tag!=='nosend')return false;
+    return true;
+  });
+  el.innerHTML=f.length?f.map(t=>templateCard(t,tab)).join(''):'<div class="empty">No templates match</div>';
+  document.getElementById('tc-uk').textContent=TEMPLATES.uk.length;
+  document.getElementById('tc-new').textContent=TEMPLATES.new.length;
+  document.getElementById('tc-mtc').textContent=TEMPLATES.mtc.length;
+}
+
+function templateCard(t,tab){
+  const id=`tc-${tab}-${(t.type||'').replace(/\W/g,'_')}`;
+  const isOpen=state.openTpl===id;
+  const tag=getTag(tab,t.type);
+  const tagClass=tag==='email'?'tagged-email':tag==='slack'?'tagged-slack':tag==='nosend'?'tagged-nosend':'';
+  const tagBadge=tag==='email'?`<span class="badge bi" style="margin-left:6px">Email</span>`:tag==='slack'?`<span class="badge bsu" style="margin-left:6px">Slack</span>`:tag==='nosend'?`<span class="badge bd" style="margin-left:6px">Don't send</span>`:'';
+  const whoBadge=t.who?`<span class="badge bnn" style="font-size:10px;margin-left:4px">${t.who}</span>`:'';
+  const typeLabel=tab==='mtc'?'MTC':tab==='new'?'NEW':'UK';
+  const te=t.type.replace(/'/g,"\\'").replace(/\\/g,'\\\\');
+  return`<div class="tcard ${tagClass}" id="${id}"><div class="tcard-hdr" onclick="toggleTpl('${id}','${tab}')"><span class="badge bnn" style="font-size:10px;flex-shrink:0">${typeLabel}</span><span class="tcard-type" style="margin-left:8px">${t.type}</span>${whoBadge}${tagBadge}<span class="tcard-subj">${t.subject}</span><span style="margin-left:6px;flex-shrink:0;font-size:12px;color:var(--text3)">${isOpen?'&#9650;':'&#9660;'}</span></div><div class="tcard-body${isOpen?' open':''}" id="body-${id}"><div class="tfield"><label>Subject line</label><div class="tv">${t.subject}</div></div><div class="tfield"><label>Message body</label><div class="tv">${(t.body||'').replace(/\n/g,'<br>')}</div></div>${t.example?`<div class="tfield"><label>Mauritius example</label><div class="tv" style="color:var(--text2)">${t.example}</div></div>`:''}<div class="triage-bar"><span class="triage-label">Send via:</span><button class="tbtn-email${tag==='email'?' active-tag':''}" onclick="setTag('${tab}','${te}','email');event.stopPropagation()">&#9993; Email</button><button class="tbtn-slack${tag==='slack'?' active-tag':''}" onclick="setTag('${tab}','${te}','slack');event.stopPropagation()">&#9737; Slack</button><button class="tbtn-nosend${tag==='nosend'?' active-tag':''}" onclick="setTag('${tab}','${te}','nosend');event.stopPropagation()">&#10005; Don't send</button>${tag?`<button class="clear-btn" onclick="setTag('${tab}','${te}',null);event.stopPropagation()">Clear</button>`:''}</div></div></div>`;
+}
+
+function toggleTpl(id,tab){state.openTpl=state.openTpl===id?null:id;renderAdvTab();}
+
+function customAdvCard(a){
+  const tag=a.tag;
+  const tagBadge=tag==='email'?`<span class="badge bi">Email</span>`:tag==='slack'?`<span class="badge bsu">Slack</span>`:tag==='nosend'?`<span class="badge bd">Don't send</span>`:`<span class="badge bnn">Untagged</span>`;
+  return`<div class="acard"><div class="acard-body"><div class="acard-title">${a.title}</div><div class="acard-meta">${a.category} - ${a.clients||'All'} - ${a.date} ${tagBadge}</div>${a.notes?`<div style="font-size:11px;color:var(--text3);margin-top:4px;line-height:1.4">${a.notes.substring(0,120)}${a.notes.length>120?'...':''}</div>`:''}<div class="acard-btns"><button class="abtn e" onclick="tagCustom(${a.id},'email')">Email</button><button class="abtn sl" onclick="tagCustom(${a.id},'slack')">Slack</button><button class="abtn ns" onclick="tagCustom(${a.id},'nosend')">Don't send</button><button class="abtn" onclick="delCustom(${a.id})">Delete</button></div></div></div>`;
+}
+
+function tagCustom(id,tag){const a=state.customAdvs.find(x=>x.id===id);if(a){a.tag=tag;}saveState();updateCounts();renderAdvTab();toast('Tagged: '+tag);}
+function delCustom(id){state.customAdvs=state.customAdvs.filter(x=>x.id!==id);saveState();updateCounts();document.getElementById('tc-custom').textContent=state.customAdvs.length;renderAdvTab();}
+
+function renderTaggedPage(tagVal,elId){
+  const el=document.getElementById(elId);if(!el)return;
+  const results=[];
+  ['uk','new','mtc'].forEach(tab=>{TEMPLATES[tab].forEach(t=>{if(getTag(tab,t.type)===tagVal)results.push({...t,tab,isTemplate:true});});});
+  state.customAdvs.filter(a=>a.tag===tagVal).forEach(a=>results.push({...a,isTemplate:false}));
+  if(!results.length){el.innerHTML='<div class="empty">Nothing tagged for this channel yet - go to All Advisories to triage your templates</div>';return;}
+  el.innerHTML=results.map(r=>{
+    if(r.isTemplate){const tl=r.tab==='mtc'?'MTC':r.tab==='new'?'NEW':'UK';const te=r.type.replace(/'/g,"\\'");return`<div class="card" style="margin-bottom:10px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span class="badge bnn" style="font-size:10px">${tl}</span><span style="font-size:13px;font-weight:600">${r.type}</span></div><div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500">${r.subject}</div><div style="font-size:12px;line-height:1.55;white-space:pre-wrap;background:var(--bg3);padding:10px;border-radius:var(--radius);border:1px solid var(--border)">${r.body||''}</div><div style="margin-top:10px"><button class="abtn" onclick="setTag('${r.tab}','${te}',null);renderTaggedPage('${tagVal}','${elId}')">Remove tag</button></div></div>`;}
+    else{return`<div class="acard"><div class="acard-body"><div class="acard-title">${r.title}</div><div class="acard-meta">${r.category} - ${r.clients||'All'} - ${r.date}</div>${r.notes?`<div style="font-size:11px;color:var(--text3);margin-top:4px">${r.notes.substring(0,100)}...</div>`:''}</div></div>`;}
+  }).join('');
+}
+
+function openNewAdv(){document.getElementById('new-adv-modal').classList.add('open');}
+function closeNewAdv(){document.getElementById('new-adv-modal').classList.remove('open');}
+function saveCustomAdv(){
+  const t=document.getElementById('na-t').value.trim();
+  if(!t)return;
+  state.customAdvs.push({id:Date.now(),title:t,category:document.getElementById('na-cat').value,clients:document.getElementById('na-cl').value,notes:document.getElementById('na-n').value,date:new Date().toLocaleDateString(),tag:null});
+  document.getElementById('na-t').value='';
+  document.getElementById('na-n').value='';
+  document.getElementById('na-cl').value='';
+  closeNewAdv();
+  saveState();
+  updateCounts();
+  state.activeAdvTab='custom';
+  document.querySelectorAll('.adv-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.adv-tab')[3]&&document.querySelectorAll('.adv-tab')[3].classList.add('active');
+  renderAdvTab();
+  toast('Advisory saved');
+}
+
+// ─── Reports ──────────────────────────────────────────────────────────────────
+function renderReports(){
+  const all=allIssues();
+  const open=all.filter(i=>!['resolved','done','compliant'].includes((i.status||'').toLowerCase()));
+  const tagged=Object.values(state.tags).filter(Boolean).length;
+  document.getElementById('r-tot').textContent=all.length;
+  document.getElementById('r-open').textContent=open.length;
+  document.getElementById('r-res').textContent=all.length-open.length;
+  document.getElementById('r-adv').textContent=tagged;
+  const a={};all.forEach(i=>{const k=i.assignee||'Unassigned';a[k]=(a[k]||0)+1;});
+  const themes=getThemes(all).slice(0,3).map(([t])=>t).join(', ');
+  document.getElementById('stats-prev').textContent=`Racing & Sports PLC - Operational Stats\nGenerated: ${new Date().toLocaleString()}\n\nISSUES (UK client impacting)\nTotal: ${all.length}  |  Open: ${open.length}  |  Resolved: ${all.length-open.length}\nHigh priority: ${all.filter(i=>['high','critical'].includes((i.priority||'').toLowerCase())).length}\n\nASSIGNEES\n${Object.entries(a).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`  ${k}: ${v}`).join('\n')}\n\nTOP THEMES\n  ${themes||'-'}\n\nADVISORY TRIAGE\nEmail: ${Object.values(state.tags).filter(t=>t==='email').length} | Slack: ${Object.values(state.tags).filter(t=>t==='slack').length} | Don't send: ${Object.values(state.tags).filter(t=>t==='nosend').length}\n\nTEMPLATES\n  UK: ${TEMPLATES.uk.length} | New: ${TEMPLATES.new.length} | Mauritius (MTC): ${TEMPLATES.mtc.length}`;
+}
+
+function copyStats(){renderReports();const t=document.getElementById('stats-prev').textContent;if(navigator.clipboard){navigator.clipboard.writeText(t).then(()=>toast('Stats copied'));}else{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Copied');}}
+
+function exportIssues(){const all=allIssues();const rows=[['Key','Summary','Assignee','Reporter','Status','Priority','Client','Type','Created'],...all.map(i=>[i.id,i.summary,i.assignee,i.reporter,i.status,i.priority,i.client,i.issueType,i.created])];const csv=rows.map(r=>r.map(c=>'"'+(c||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='uk-incidents-'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('Exported');}
+function exportTagged(){const rows=[['Template','Tab','Subject','Channel']];['uk','new','mtc'].forEach(tab=>{TEMPLATES[tab].forEach(t=>{const tag=getTag(tab,t.type);if(tag)rows.push([t.type,tab,t.subject,tag]);});});state.customAdvs.filter(a=>a.tag).forEach(a=>rows.push([a.title,'custom','',a.tag]));const csv=rows.map(r=>r.map(c=>'"'+(c||'').replace(/"/g,'""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='tagged-advisories-'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('Exported');}
+
+// ─── CSV Import ───────────────────────────────────────────────────────────────
+function handleCSV(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>{const text=ev.target.result;const lines=text.split(/\r?\n/).filter(l=>l.trim());const pr=row=>{const r=[];let cur='',inQ=false;for(let i=0;i<row.length;i++){const c=row[i];if(c==='"'&&!inQ)inQ=true;else if(c==='"'&&inQ&&row[i+1]==='"'){cur+='"';i++;}else if(c==='"'&&inQ)inQ=false;else if(c===','&&!inQ){r.push(cur.trim());cur='';}else cur+=c;}r.push(cur.trim());return r;};const headers=pr(lines[0]);state.csvHeaders=headers;state.csvPending=lines.slice(1).map(l=>{const o={};headers.forEach((h,i)=>o[h]=pr(l)[i]||'');return o;});document.getElementById('csv-prev-card').style.display='block';document.getElementById('prev-cnt').textContent=`${state.csvPending.length} rows, ${headers.length} columns`;const t=document.getElementById('prev-tbl');t.innerHTML='<thead><tr>'+headers.slice(0,8).map(h=>`<th>${h}</th>`).join('')+'</tr></thead><tbody>'+state.csvPending.slice(0,5).map(r=>'<tr>'+headers.slice(0,8).map(h=>`<td>${(r[h]||'').substring(0,28)}</td>`).join('')+'</tr>').join('')+'</tbody>';document.getElementById('imp-status').textContent=`Detected ${state.csvPending.length} issues across ${headers.length} columns.`;};reader.readAsText(file);}
+
+function confirmImport(){
+  const h=state.csvHeaders;
+  const fv=(raw,keys)=>{for(const k of keys)for(const hd of h)if(hd.toLowerCase().includes(k.toLowerCase())&&raw[hd])return raw[hd];return '';};
+  state.issues=state.csvPending.map(raw=>{const labels=[raw['Labels'],raw['Labels.1'],raw['Labels.2']].filter(l=>l&&l!=='nan');const cl=labels.filter(l=>!['UK_Ops_Impact','SupportRequest','UK-Project-Priority','Mid-Term','Immediate'].includes(l));return{id:fv(raw,['Issue key','key'])||Math.random().toString(36).slice(2,8),summary:fv(raw,['Summary','Title','Issue'])||'Untitled',assignee:fv(raw,['Assignee']),reporter:fv(raw,['Reporter']),status:fv(raw,['Status']),priority:fv(raw,['Priority']),client:cl[0]||'UK Ops',labels,issueType:fv(raw,['Issue Type']),created:fv(raw,['Created'])};});
+  document.getElementById('csv-prev-card').style.display='none';
+  document.getElementById('imp-status').textContent=`Imported ${state.issues.length} issues.`;
+  saveState();
+  updateCounts();
+  nav('issues',null);
+  toast(`${state.issues.length} issues imported`);
+}
+
+function cancelImport(){state.csvPending=[];document.getElementById('csv-prev-card').style.display='none';}
+
+function resetToSample(){
+  if(!confirm('Replace all issues with the 12 sample tickets? Your manual tickets and advisory tags will be kept.'))return;
+  state.issues=[...SAMPLE_ISSUES];
+  saveState();
+  updateCounts();
+  nav('issues',null);
+  toast('Reset to sample data');
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+renderDashboard();
+</script>
+</body>
+</html>
