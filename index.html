@@ -126,6 +126,44 @@ pre{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rad
 .form-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .form-row>*{flex:1;min-width:130px}
 .section-title{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin:18px 0 10px}
+
+/* ── Client Hub ───────────────────────────────────────── */
+.hub-tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.hub-tab{padding:7px 18px;border-radius:20px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:13px;transition:all .15s}
+.hub-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.client-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:18px}
+.client-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.client-name{font-size:17px;font-weight:600;color:var(--text)}
+.client-meta{font-size:12px;color:var(--text3)}
+.hub-section{margin-bottom:18px}
+.hub-section-title{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.hub-section-title span{font-size:10px;font-weight:400;color:var(--text3);text-transform:none}
+.note-entry{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:6px;font-size:13px;color:var(--text)}
+.note-date{font-size:10px;color:var(--text3);margin-bottom:4px}
+.note-body{line-height:1.5}
+.ap-item{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);margin-bottom:6px;font-size:13px}
+.ap-check{flex-shrink:0;width:16px;height:16px;margin-top:2px;cursor:pointer;accent-color:var(--accent)}
+.ap-item.done .ap-text{text-decoration:line-through;color:var(--text3)}
+.ap-meta{font-size:10px;color:var(--text3);margin-top:2px}
+.ap-del{margin-left:auto;cursor:pointer;color:var(--text3);font-size:14px;padding:0 4px}
+.ap-del:hover{color:var(--danger)}
+.health-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px}
+.health-pill{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid transparent}
+.health-green{background:#052e16;color:#22c55e;border-color:#166534}
+.health-amber{background:#451a03;color:#f59e0b;border-color:#92400e}
+.health-red{background:#450a0a;color:#ef4444;border-color:#7f1d1d}
+.health-active{outline:2px solid #fff;outline-offset:1px}
+.linked-issues{font-size:12px}
+.linked-issues .li-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)}
+.linked-issues .li-row:last-child{border:none}
+.hub-textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:10px;font-size:13px;font-family:inherit;resize:vertical;min-height:72px;box-sizing:border-box}
+.hub-textarea:focus{outline:none;border-color:var(--accent)}
+.hub-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 10px;font-size:13px;font-family:inherit;box-sizing:border-box}
+.hub-input:focus{outline:none;border-color:var(--accent)}
+.hub-row{display:flex;gap:8px;align-items:flex-end;margin-bottom:8px}
+.hub-row .hub-input{flex:1}
+.contact-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.contact-row:last-child{border:none}
 </style>
 </head>
 <body>
@@ -146,6 +184,12 @@ pre{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rad
     <button class="ni" onclick="nav('clients',this)"><span class="ico">◫</span> All clients</button>
     <button class="ni" onclick="nav('mauritius',this)"><span class="ico">◈</span> Mauritius</button>
     <button class="ni" onclick="nav('tickets',this)"><span class="ico">+</span> Ticket log</button>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Client Hubs</div>
+    <button class="ni" onclick="nav('hub-mts',this)"><span class="ico">◫</span> MTS</button>
+    <button class="ni" onclick="nav('hub-betbridge',this)"><span class="ico">◫</span> BetBridge</button>
+    <button class="ni" onclick="nav('hub-saas',this)"><span class="ico">◫</span> SaaS</button>
   </div>
   <div class="nav-section">
     <div class="nav-label">Advisories <span class="badge-pill" id="ab" style="margin-left:4px">0</span></div>
@@ -194,6 +238,24 @@ pre{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rad
       </div>
     </div>
 
+
+    <!-- HUB: MTS -->
+    <div class="page" id="page-hub-mts">
+      <div class="hub-tabs" id="htabs-mts"><button class="hub-tab active" onclick="switchClient('mts','Stakemate',this)">Stakemate</button><button class="hub-tab" onclick="switchClient('mts','Laserbet',this)">Laserbet</button></div>
+      <div id="hub-content-mts"></div>
+    </div>
+
+    <!-- HUB: BetBridge -->
+    <div class="page" id="page-hub-betbridge">
+      <div class="hub-tabs" id="htabs-betbridge"><button class="hub-tab active" onclick="switchClient('betbridge','UPC',this)">UPC</button><button class="hub-tab" onclick="switchClient('betbridge','Fairplay',this)">Fairplay</button><button class="hub-tab" onclick="switchClient('betbridge','Phoenix',this)">Phoenix</button><button class="hub-tab" onclick="switchClient('betbridge','Expat',this)">Expat</button></div>
+      <div id="hub-content-betbridge"></div>
+    </div>
+
+    <!-- HUB: SaaS -->
+    <div class="page" id="page-hub-saas">
+      <div class="hub-tabs" id="htabs-saas"><button class="hub-tab active" onclick="switchClient('saas','Altenar',this)">Altenar</button><button class="hub-tab" onclick="switchClient('saas','Playbook',this)">Playbook</button><button class="hub-tab" onclick="switchClient('saas','Swifty Gaming',this)">Swifty Gaming</button><button class="hub-tab" onclick="switchClient('saas','Pragmatic Play',this)">Pragmatic Play</button></div>
+      <div id="hub-content-saas"></div>
+    </div>
     <!-- JIRA IMPORT -->
     <div class="page" id="page-jira">
       <div class="card">
@@ -429,6 +491,7 @@ function saveState() {
       manualTickets: state.manualTickets,
       muManual: state.muManual,
       manualChallenges: state.manualChallenges,
+      clientHubs: state.clientHubs,
       savedAt: Date.now()
     }));
     const el = document.getElementById('last-saved');
@@ -445,6 +508,7 @@ const state = {
   manualTickets: saved ? saved.manualTickets : [],
   muManual: saved ? saved.muManual : [],
   manualChallenges: saved ? saved.manualChallenges : [],
+  clientHubs: saved ? saved.clientHubs : {},
   csvHeaders: [],
   csvPending: [],
   openTpl: null,
@@ -461,7 +525,7 @@ if (saved && saved.savedAt) {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-const TITLES={dashboard:'Dashboard',jira:'Jira import',issues:'Issues',themes:'Themes & analysis',challenges:'Business challenges',clients:'All clients',mauritius:'Mauritius',tickets:'Ticket log',advisories:'All advisories','adv-email':'Via email','adv-slack':'Via Slack','adv-review':"Don't send",reports:'Reports & export'};
+const TITLES={dashboard:'Dashboard',jira:'Jira import',issues:'Issues',themes:'Themes & analysis',challenges:'Business challenges',clients:'All clients',mauritius:'Mauritius',tickets:'Ticket log',advisories:'All advisories','adv-email':'Via email','adv-slack':'Via Slack','adv-review':"Don't send",reports:'Reports & export','hub-mts':'MTS Clients','hub-betbridge':'BetBridge Clients','hub-saas':'SaaS Clients'};
 
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 
@@ -473,7 +537,7 @@ function nav(id,el){
   if(el)el.classList.add('active');
   else document.querySelectorAll('.ni').forEach(n=>{if((n.getAttribute('onclick')||'').includes("'"+id+"'"))n.classList.add('active');});
   document.getElementById('page-title').textContent=TITLES[id]||id;
-  ({dashboard:renderDashboard,issues:renderIssues,themes:renderThemes,challenges:renderChallenges,clients:renderClients,mauritius:renderMauritius,tickets:renderTickets,advisories:renderAdvPage,reports:renderReports}[id]||(() => {}))();
+  ({dashboard:renderDashboard,issues:renderIssues,themes:renderThemes,challenges:renderChallenges,clients:renderClients,mauritius:renderMauritius,tickets:renderTickets,advisories:renderAdvPage,reports:renderReports,'hub-mts':()=>renderHub('mts'),'hub-betbridge':()=>renderHub('betbridge'),'hub-saas':()=>renderHub('saas')}[id]||(() => {}))();
   if(id==='adv-email')renderTaggedPage('email','em-list');
   if(id==='adv-slack')renderTaggedPage('slack','sl-list');
   if(id==='adv-review')renderTaggedPage('nosend','ns-list');
@@ -773,6 +837,228 @@ function resetToSample(){
   updateCounts();
   nav('issues',null);
   toast('Reset to sample data');
+}
+
+
+// ─── Client Hubs ─────────────────────────────────────────────────────────────
+const HUB_CLIENTS = {
+  mts: ['Stakemate','Laserbet'],
+  betbridge: ['UPC','Fairplay','Phoenix','Expat'],
+  saas: ['Altenar','Playbook','Swifty Gaming','Pragmatic Play']
+};
+
+function hubKey(hub, client) { return hub + '::' + client; }
+
+function getHub(hub, client) {
+  const k = hubKey(hub, client);
+  if (!state.clientHubs[k]) state.clientHubs[k] = {
+    health: 'green',
+    notes: [],
+    actions: [],
+    contacts: [],
+    tier: '',
+    linkedIssues: []
+  };
+  return state.clientHubs[k];
+}
+
+function renderHub(hub) {
+  const clients = HUB_CLIENTS[hub];
+  // find active tab
+  const tabEl = document.querySelector(`#htabs-${hub} .hub-tab.active`);
+  const active = tabEl ? tabEl.textContent.trim() : clients[0];
+  renderClientHub(hub, active);
+}
+
+function switchClient(hub, client, el) {
+  document.querySelectorAll(`#htabs-${hub} .hub-tab`).forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderClientHub(hub, client);
+}
+
+function renderClientHub(hub, client) {
+  const d = getHub(hub, client);
+  const issues = allIssues().filter(i => (i.client||'').toLowerCase() === client.toLowerCase());
+  const openIssues = issues.filter(i => !['resolved','done','compliant'].includes((i.status||'').toLowerCase()));
+
+  const healthColors = {green:'health-green',amber:'health-amber',red:'health-red'};
+  const healthLabels = {green:'Healthy',amber:'Needs Attention',red:'At Risk'};
+
+  const notesHtml = d.notes.length
+    ? d.notes.slice().reverse().map((n,ri) => {
+        const i = d.notes.length - 1 - ri;
+        return `<div class="note-entry"><div class="note-date">${n.date} ${n.time||''}</div><div class="note-body">${escHtml(n.text)}</div><div style="margin-top:6px;display:flex;gap:6px"><button class="btn-ghost" style="font-size:11px;padding:3px 8px" onclick="deleteNote('${hub}','${client}',${i})">Delete</button></div></div>`;
+      }).join('')
+    : '<div class="empty" style="padding:8px 0">No call notes yet</div>';
+
+  const actionsHtml = d.actions.length
+    ? d.actions.map((a,i) => `<div class="ap-item${a.done?' done':''}"><input type="checkbox" class="ap-check" ${a.done?'checked':''} onchange="toggleAction('${hub}','${client}',${i})"><div style="flex:1"><div class="ap-text">${escHtml(a.text)}</div><div class="ap-meta">${a.due?'Due: '+a.due:''} ${a.owner?'· Owner: '+a.owner:''}</div></div><span class="ap-del" onclick="deleteAction('${hub}','${client}',${i})">✕</span></div>`).join('')
+    : '<div class="empty" style="padding:8px 0">No action points yet</div>';
+
+  const contactsHtml = d.contacts.length
+    ? d.contacts.map((c,i) => `<div class="contact-row"><div><strong>${escHtml(c.name)}</strong> <span style="color:var(--text3);font-size:11px">${escHtml(c.role)}</span><br><span style="font-size:11px;color:var(--text2)">${escHtml(c.email)} ${c.phone?'· '+c.phone:''}</span></div><button class="btn-ghost" style="font-size:11px;padding:3px 8px" onclick="deleteContact('${hub}','${client}',${i})">Remove</button></div>`).join('')
+    : '<div style="font-size:12px;color:var(--text3);padding:4px 0">No contacts added</div>';
+
+  const linkedHtml = openIssues.length
+    ? `<div class="linked-issues">${openIssues.slice(0,8).map(i=>`<div class="li-row"><span style="font-family:monospace;font-size:11px;color:var(--text3)">${i.id}</span>${sb(i.status)}<span style="flex:1;font-size:12px">${escHtml(i.summary.substring(0,55))}</span>${pb(i.priority)}</div>`).join('')}</div>`
+    : '<div class="empty" style="padding:6px 0;font-size:12px">No open issues linked to this client</div>';
+
+  document.getElementById('hub-content-'+hub).innerHTML = `
+  <div class="client-card">
+    <div class="client-header">
+      <div>
+        <div class="client-name">${client}</div>
+        <div class="client-meta">${d.tier?'Tier: '+d.tier:''}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="hub-section-title" style="margin-bottom:4px">Account health</div>
+        <div class="health-bar">
+          ${['green','amber','red'].map(h=>`<span class="health-pill ${healthColors[h]}${d.health===h?' health-active':''}" onclick="setHealth('${hub}','${client}','${h}')">${healthLabels[h]}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <div class="hub-section-title">Tier / Plan</div>
+      <input class="hub-input" placeholder="e.g. Enterprise, Premium…" value="${escHtml(d.tier||'')}" onchange="setHubField('${hub}','${client}','tier',this.value)">
+    </div>
+
+    <!-- Call Notes -->
+    <div class="hub-section">
+      <div class="hub-section-title">Call notes <span>logged in reverse order</span></div>
+      <div class="hub-row">
+        <textarea class="hub-textarea" id="note-input-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Log a call note…" rows="3"></textarea>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <button class="btn-primary" style="font-size:12px" onclick="addNote('${hub}','${client}')">Add note</button>
+      </div>
+      <div id="notes-list-${hub}-${client.replace(/\s+/g,'_')}">${notesHtml}</div>
+    </div>
+
+    <!-- Action Points -->
+    <div class="hub-section">
+      <div class="hub-section-title">Action points</div>
+      <div class="hub-row">
+        <input class="hub-input" id="ap-text-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Action item…">
+        <input class="hub-input" style="width:130px;flex:none" type="date" id="ap-due-${hub}-${client.replace(/\s+/g,'_')}">
+        <input class="hub-input" style="width:120px;flex:none" id="ap-owner-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Owner">
+        <button class="btn-primary" style="white-space:nowrap;flex:none;font-size:12px" onclick="addAction('${hub}','${client}')">Add</button>
+      </div>
+      <div id="actions-list-${hub}-${client.replace(/\s+/g,'_')}">${actionsHtml}</div>
+    </div>
+
+    <!-- Contacts -->
+    <div class="hub-section">
+      <div class="hub-section-title">Key contacts</div>
+      <div class="hub-row" style="flex-wrap:wrap">
+        <input class="hub-input" id="ct-name-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Name" style="flex:1;min-width:100px">
+        <input class="hub-input" id="ct-role-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Role" style="flex:1;min-width:100px">
+        <input class="hub-input" id="ct-email-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Email" style="flex:1;min-width:120px">
+        <input class="hub-input" id="ct-phone-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Phone" style="flex:0 0 110px">
+        <button class="btn-primary" style="white-space:nowrap;flex:none;font-size:12px" onclick="addContact('${hub}','${client}')">Add</button>
+      </div>
+      <div id="contacts-list-${hub}-${client.replace(/\s+/g,'_')}">${contactsHtml}</div>
+    </div>
+
+    <!-- Linked Issues -->
+    <div class="hub-section">
+      <div class="hub-section-title">Open issues <span>(matched from Jira import by client name)</span></div>
+      ${linkedHtml}
+    </div>
+  </div>
+  `;
+}
+
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function setHealth(hub, client, h) {
+  const d = getHub(hub, client);
+  d.health = h;
+  saveState();
+  renderClientHub(hub, client);
+}
+
+function setHubField(hub, client, field, val) {
+  const d = getHub(hub, client);
+  d[field] = val;
+  saveState();
+}
+
+function addNote(hub, client) {
+  const k = client.replace(/\s+/g, '_');
+  const ta = document.getElementById('note-input-'+hub+'-'+k);
+  const text = ta.value.trim();
+  if (!text) return;
+  const d = getHub(hub, client);
+  const now = new Date();
+  d.notes.push({
+    text,
+    date: now.toLocaleDateString(),
+    time: now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
+  });
+  ta.value = '';
+  saveState();
+  renderClientHub(hub, client);
+  toast('Note added');
+}
+
+function deleteNote(hub, client, i) {
+  const d = getHub(hub, client);
+  d.notes.splice(i, 1);
+  saveState();
+  renderClientHub(hub, client);
+}
+
+function addAction(hub, client) {
+  const k = client.replace(/\s+/g, '_');
+  const text = document.getElementById('ap-text-'+hub+'-'+k).value.trim();
+  if (!text) return;
+  const due = document.getElementById('ap-due-'+hub+'-'+k).value;
+  const owner = document.getElementById('ap-owner-'+hub+'-'+k).value.trim();
+  const d = getHub(hub, client);
+  d.actions.push({text, due, owner, done: false, created: new Date().toLocaleDateString()});
+  document.getElementById('ap-text-'+hub+'-'+k).value = '';
+  document.getElementById('ap-due-'+hub+'-'+k).value = '';
+  document.getElementById('ap-owner-'+hub+'-'+k).value = '';
+  saveState();
+  renderClientHub(hub, client);
+  toast('Action added');
+}
+
+function toggleAction(hub, client, i) {
+  const d = getHub(hub, client);
+  d.actions[i].done = !d.actions[i].done;
+  saveState();
+  renderClientHub(hub, client);
+}
+
+function deleteAction(hub, client, i) {
+  const d = getHub(hub, client);
+  d.actions.splice(i, 1);
+  saveState();
+  renderClientHub(hub, client);
+}
+
+function addContact(hub, client) {
+  const k = client.replace(/\s+/g, '_');
+  const name = document.getElementById('ct-name-'+hub+'-'+k).value.trim();
+  if (!name) return;
+  const role = document.getElementById('ct-role-'+hub+'-'+k).value.trim();
+  const email = document.getElementById('ct-email-'+hub+'-'+k).value.trim();
+  const phone = document.getElementById('ct-phone-'+hub+'-'+k).value.trim();
+  const d = getHub(hub, client);
+  d.contacts.push({name, role, email, phone});
+  ['name','role','email','phone'].forEach(f => document.getElementById('ct-'+f+'-'+hub+'-'+k).value = '');
+  saveState();
+  renderClientHub(hub, client);
+  toast('Contact added');
+}
+
+function deleteContact(hub, client, i) {
+  const d = getHub(hub, client);
+  d.contacts.splice(i, 1);
+  saveState();
+  renderClientHub(hub, client);
 }
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
