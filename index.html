@@ -202,6 +202,17 @@ pre{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rad
 .hub-row .hub-input{flex:1;min-width:80px}
 .contact-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
 .contact-row:last-child{border:none}
+
+/* ── Export builder ─────────────────────────────────── */
+.exp-tpl-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.exp-tpl-row:last-child{border:none}
+.exp-tpl-check{flex-shrink:0;width:16px;height:16px;margin-top:2px;accent-color:var(--accent);cursor:pointer}
+.exp-tpl-body{flex:1}
+.exp-tpl-type{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.exp-tpl-subj{font-size:11px;color:var(--text3);margin-bottom:4px}
+.exp-tpl-note{width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:5px 8px;font-size:11px;font-family:inherit;margin-top:4px;resize:vertical}
+.exp-tpl-note:focus{outline:none;border-color:var(--accent)}
+.exp-group-hdr{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--accent);padding:12px 0 4px;border-bottom:1px solid var(--border);margin-bottom:4px}
 </style>
 </head>
 <body>
@@ -235,6 +246,8 @@ pre{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rad
     <button class="ni" onclick="nav('adv-email',this)"><span class="ico">✉</span> Via email <span class="badge-pill" id="nb-em">0</span></button>
     <button class="ni" onclick="nav('adv-slack',this)"><span class="ico">⚡</span> Via Slack <span class="badge-pill ok" id="nb-sl">0</span></button>
     <button class="ni" onclick="nav('adv-review',this)"><span class="ico">✕</span> Don't send <span class="badge-pill warn" id="nb-ns">0</span></button>
+    <button class="ni" onclick="nav('adv-export',this)"><span class="ico">⬡</span> Export builder</button>
+    <button class="ni" onclick="nav('adv-form',this)"><span class="ico">◻</span> Client form</button>
   </div>
 </nav>
 
@@ -466,6 +479,170 @@ pre{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rad
       <div class="card"><div class="ch"><span class="ct">✕ Don't send</span><span class="badge bd" id="nb-ns2">0</span></div><div id="ns-list"></div></div>
     </div>
 
+
+    <!-- ADV-EXPORT -->
+    <div class="page" id="page-adv-export">
+      <div class="card" style="margin-bottom:16px">
+        <div class="ch">
+          <span class="ct">Export settings</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-primary" onclick="buildAdvExport()">Build export</button>
+            <button class="btn-ghost" onclick="selectAllExport(true)">Select all</button>
+            <button class="btn-ghost" onclick="selectAllExport(false)">Deselect all</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+          <div>
+            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Export title</label>
+            <input id="exp-title" class="hub-input" placeholder="e.g. RAS Ops Advisory Pack — June 2026" value="RAS Ops — Advisory Templates">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Prepared for</label>
+            <input id="exp-client" class="hub-input" placeholder="Client or audience name">
+          </div>
+        </div>
+        <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
+          <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="radio" name="exp-format" value="full" checked> Full (subject + body)
+          </label>
+          <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="radio" name="exp-format" value="subjects"> Subject lines only
+          </label>
+          <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="radio" name="exp-format" value="tagged"> Tagged only (my selections)
+          </label>
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Introductory note (optional)</label>
+          <textarea id="exp-intro" class="hub-textarea" rows="2" placeholder="Add any context or notes to appear at the top of the export…"></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><span class="ct">Template selection</span><span style="font-size:11px;color:var(--text3)" id="exp-sel-count"></span></div>
+        <div id="exp-template-list"></div>
+      </div>
+    </div>
+
+    <!-- ADV-FORM -->
+    <div class="page" id="page-adv-form">
+      <div class="card" style="margin-bottom:16px">
+        <div class="ch">
+          <span class="ct">Client preference form</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn-primary" onclick="generateClientForm()">Generate &amp; download form</button>
+            <button class="btn-ghost" onclick="previewClientForm()">Preview</button>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.6">
+          This generates a standalone HTML file you can send to clients. They open it in their browser, tick the advisories they want and their preferred channel, then click submit — which copies a formatted summary they can paste into an email back to you.
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+          <div>
+            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Your company name</label>
+            <input id="form-company" class="hub-input" value="Racing and Sports PLC" placeholder="Your company name">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Return email address</label>
+            <input id="form-email" class="hub-input" placeholder="advisories@racingandsports.com">
+          </div>
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Intro message to client</label>
+          <textarea id="form-intro" class="hub-textarea" rows="3" placeholder="Please review the advisory templates below and tick the ones you'd like to receive, along with your preferred channel…">Please review the list of advisory templates below. Tick the ones you would like to receive and select your preferred delivery channel (Email, Slack, or Both). Once complete, click the Submit button to generate a summary you can reply to us with.</textarea>
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Which templates to include</label>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="form-inc-uk" checked> Advisory templates</label>
+            <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="form-inc-mtc"> Mauritius MTC templates</label>
+            <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="form-inc-custom"> Custom advisories</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><span class="ct">Form preview — templates that will appear</span></div>
+        <div id="form-preview-list" style="font-size:12px;color:var(--text2);line-height:2"></div>
+      </div>
+    </div>
+
+    <!-- ADV-EXPORT -->
+    <div class="page" id="page-adv-export">
+      <div class="card" style="margin-bottom:16px">
+        <div class="ch">
+          <span class="ct">Export settings</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-primary" onclick="buildAdvExport()">Build &amp; open export</button>
+            <button class="btn-ghost" onclick="selectAllExport(true)">Select all</button>
+            <button class="btn-ghost" onclick="selectAllExport(false)">Deselect all</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+          <div>
+            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Export title</label>
+            <input id="exp-title" class="hub-input" value="RAS Ops — Advisory Templates">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Prepared for (client name)</label>
+            <input id="exp-client" class="hub-input" placeholder="e.g. Stakemate">
+          </div>
+        </div>
+        <div style="display:flex;gap:20px;margin-bottom:16px;flex-wrap:wrap">
+          <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="exp-format" value="full" checked> Full (subject + body)</label>
+          <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="exp-format" value="subjects"> Subject lines only</label>
+          <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="exp-format" value="tagged"> Tagged only (my selections)</label>
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Introductory note (optional)</label>
+          <textarea id="exp-intro" class="hub-textarea" rows="2" placeholder="Add any context or notes to appear at the top of the export…"></textarea>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="ct">Select templates to include</span><span style="font-size:11px;color:var(--text3);margin-left:8px" id="exp-sel-count"></span></div>
+        <div id="exp-template-list"></div>
+      </div>
+    </div>
+
+    <!-- ADV-FORM -->
+    <div class="page" id="page-adv-form">
+      <div class="card" style="margin-bottom:16px">
+        <div class="ch">
+          <span class="ct">Client preference form generator</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn-primary" onclick="generateClientForm()">Download form</button>
+            <button class="btn-ghost" onclick="previewClientForm()">Preview</button>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.6">Generates a standalone HTML file to send to clients. They open it in their browser, tick which advisories they want and their preferred channel (Email / Slack / Both), then click Submit — which produces a formatted response they can copy and email back.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+          <div>
+            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Your company name</label>
+            <input id="form-company" class="hub-input" value="Racing and Sports PLC">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Return email address</label>
+            <input id="form-email" class="hub-input" placeholder="advisories@racingandsports.com">
+          </div>
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Intro message shown to client</label>
+          <textarea id="form-intro" class="hub-textarea" rows="3">Please review the advisory templates below. Tick the ones you would like to receive and select your preferred delivery channel (Email, Slack, or Both). Once complete, click Submit to generate a summary you can email back to us.</textarea>
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:8px">Include in form</label>
+          <div style="display:flex;gap:16px;flex-wrap:wrap">
+            <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="form-inc-uk" checked onchange="renderFormPreview()"> Advisory templates</label>
+            <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="form-inc-mtc" onchange="renderFormPreview()"> Mauritius MTC</label>
+            <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="form-inc-custom" onchange="renderFormPreview()"> Custom advisories</label>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="ct">Templates that will appear in the form</span></div>
+        <div id="form-preview-list" style="font-size:12px;color:var(--text2);line-height:1.8;padding:4px 0"></div>
+      </div>
+    </div>
     <!-- REPORTS -->
     <div class="page" id="page-reports">
       <div class="grid4" style="margin-bottom:16px">
@@ -595,7 +772,7 @@ if (saved && saved.savedAt) {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-const TITLES={dashboard:'Dashboard',jira:'Jira import',issues:'Issues',themes:'Themes & analysis',challenges:'Business challenges',clients:'All clients',mauritius:'Mauritius',tickets:'Ticket log',advisories:'All advisories','adv-email':'Via email','adv-slack':'Via Slack','adv-review':"Don't send",reports:'Reports & export','hub-mts':'MTS Clients','hub-betbridge':'BetBridge Clients','hub-saas':'SaaS Clients'};
+const TITLES={dashboard:'Dashboard',jira:'Jira import',issues:'Issues',themes:'Themes & analysis',challenges:'Business challenges',clients:'All clients',mauritius:'Mauritius',tickets:'Ticket log',advisories:'All advisories','adv-email':'Via email','adv-slack':'Via Slack','adv-review':"Don't send",reports:'Reports & export','hub-mts':'MTS Clients','hub-betbridge':'BetBridge Clients','hub-saas':'SaaS Clients','adv-export':'Export Builder','adv-form':'Client Preference Form'};
 
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 
@@ -607,7 +784,7 @@ function nav(id,el){
   if(el)el.classList.add('active');
   else document.querySelectorAll('.ni').forEach(n=>{if((n.getAttribute('onclick')||'').includes("'"+id+"'"))n.classList.add('active');});
   document.getElementById('page-title').textContent=TITLES[id]||id;
-  ({dashboard:renderDashboard,issues:renderIssues,themes:renderThemes,challenges:renderChallenges,clients:renderClients,mauritius:renderMauritius,tickets:renderTickets,advisories:renderAdvPage,reports:renderReports,'hub-mts':()=>renderHub('mts'),'hub-betbridge':()=>renderHub('betbridge'),'hub-saas':()=>renderHub('saas')}[id]||(() => {}))();
+  ({dashboard:renderDashboard,issues:renderIssues,themes:renderThemes,challenges:renderChallenges,clients:renderClients,mauritius:renderMauritius,tickets:renderTickets,advisories:renderAdvPage,reports:renderReports,'hub-mts':()=>renderHub('mts'),'hub-betbridge':()=>renderHub('betbridge'),'hub-saas':()=>renderHub('saas'),'adv-export':renderAdvExport,'adv-form':renderAdvForm}[id]||(() => {}))();
   if(id==='adv-email')renderTaggedPage('email','em-list');
   if(id==='adv-slack')renderTaggedPage('slack','sl-list');
   if(id==='adv-review')renderTaggedPage('nosend','ns-list');
@@ -1381,6 +1558,412 @@ function exportAdvReport(){
   const w=window.open('','_blank');
   if(w){w.document.write(html);w.document.close();setTimeout(()=>w.print(),400);}
   toast('Report opened — use browser print/Save as PDF');
+}
+
+
+// ─── Client Preference Form ───────────────────────────────────────────────────
+
+function renderAdvForm() {
+  renderFormPreview();
+  ['form-inc-uk','form-inc-mtc','form-inc-custom'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.onchange = renderFormPreview;
+  });
+}
+
+function getFormTemplates() {
+  const items = [];
+  if (document.getElementById('form-inc-uk') && document.getElementById('form-inc-uk').checked) {
+    [...TEMPLATES.uk,...TEMPLATES.new].forEach(t => items.push({group:'Advisory', type:t.type, subject:t.subject}));
+  }
+  if (document.getElementById('form-inc-mtc') && document.getElementById('form-inc-mtc').checked) {
+    TEMPLATES.mtc.forEach(t => items.push({group:'Mauritius MTC', type:t.type, subject:t.subject}));
+  }
+  if (document.getElementById('form-inc-custom') && document.getElementById('form-inc-custom').checked) {
+    state.customAdvs.forEach(a => items.push({group:'Custom', type:a.title||'Advisory', subject:a.notes||''}));
+  }
+  return items;
+}
+
+function renderFormPreview() {
+  const items = getFormTemplates();
+  const el = document.getElementById('form-preview-list');
+  if (!el) return;
+  if (!items.length) { el.innerHTML='<div class="empty">No templates selected above</div>'; return; }
+  const byGroup = {};
+  items.forEach(t => { if(!byGroup[t.group]) byGroup[t.group]=[]; byGroup[t.group].push(t); });
+  el.innerHTML = Object.entries(byGroup).map(([g,ts]) =>
+    '<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--accent);margin-bottom:4px">'+g+' ('+ts.length+')</div>'
+    +ts.map(t=>'<div style="padding:2px 0">✓ '+escAdvHtml(t.type)+'</div>').join('')+'</div>'
+  ).join('');
+}
+
+function generateClientForm() {
+  const html = buildClientFormHtml(false);
+  const blob = new Blob([html], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'advisory-preference-form-'+new Date().toISOString().slice(0,10)+'.html';
+  a.click();
+  toast('Form downloaded — send the HTML file to your client');
+}
+
+function previewClientForm() {
+  const html = buildClientFormHtml(true);
+  const w = window.open('','_blank');
+  if (w) { w.document.write(html); w.document.close(); }
+}
+
+function buildClientFormHtml(isPreview) {
+  const company = document.getElementById('form-company').value.trim() || 'Racing and Sports PLC';
+  const returnEmail = document.getElementById('form-email').value.trim();
+  const intro = document.getElementById('form-intro').value.trim();
+  const items = getFormTemplates();
+  const date = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+
+  const byGroup = {};
+  items.forEach(t => { if(!byGroup[t.group]) byGroup[t.group]=[]; byGroup[t.group].push(t); });
+
+  const formRows = Object.entries(byGroup).map(([g,ts]) =>
+    '<tr><td colspan="4" style="background:#f0f4ff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#3b5bdb;padding:8px 12px">'+g+'</td></tr>'
+    + ts.map((t,i) => {
+      const id = g.replace(/\s/g,'_')+'_'+i;
+      return '<tr style="border-bottom:1px solid #eee">'
+        +'<td style="padding:10px 12px;font-size:13px;font-weight:500">'+t.type+'</td>'
+        +'<td style="padding:10px 12px;font-size:12px;color:#666;font-style:italic">'+t.subject+'</td>'
+        +'<td style="padding:10px 12px;text-align:center"><input type="checkbox" name="sel_'+id+'" id="sel_'+id+'" style="width:18px;height:18px;accent-color:#3b82f6"></td>'
+        +'<td style="padding:10px 8px">'
+        +'<select name="ch_'+id+'" id="ch_'+id+'" style="font-size:12px;padding:4px 6px;border:1px solid #ddd;border-radius:4px;background:#fff;width:100%">'
+        +'<option value="">— Channel —</option>'
+        +'<option value="Email">Email</option>'
+        +'<option value="Slack">Slack</option>'
+        +'<option value="Both">Both</option>'
+        +'</select></td></tr>';
+    }).join('')
+  ).join('');
+
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+    +'<title>Advisory Preferences — '+company+'</title>'
+    +'<style>'
+    +'*{box-sizing:border-box;margin:0;padding:0}'
+    +'body{font-family:Arial,sans-serif;background:#f7f9fc;color:#111;min-height:100vh}'
+    +'.header{background:#1e3a5f;color:#fff;padding:28px 40px}'
+    +'.header h1{font-size:22px;margin-bottom:4px}'
+    +'.header p{font-size:13px;opacity:.8}'
+    +'.container{max-width:900px;margin:30px auto;padding:0 20px}'
+    +'.card{background:#fff;border:1px solid #dde3ef;border-radius:8px;margin-bottom:20px}'
+    +'.card-title{font-size:14px;font-weight:700;padding:14px 20px;border-bottom:1px solid #eee;color:#333}'
+    +'.intro-box{padding:16px 20px;font-size:13px;line-height:1.7;color:#444}'
+    +'.client-fields{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px 20px}'
+    +'.field label{font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px}'
+    +'.field input{width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:5px;font-size:13px;font-family:Arial,sans-serif}'
+    +'.field input:focus{outline:none;border-color:#3b82f6}'
+    +'table{width:100%;border-collapse:collapse}'
+    +'thead th{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#666;padding:10px 12px;border-bottom:2px solid #eee;text-align:left;background:#fafafa}'
+    +'thead th:last-child{width:130px}'
+    +'thead th:nth-child(3){width:80px;text-align:center}'
+    +'tr:hover td{background:#fafeff}'
+    +'.submit-bar{background:#fff;border:1px solid #dde3ef;border-radius:8px;padding:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}'
+    +'.btn{padding:11px 24px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;font-family:Arial,sans-serif}'
+    +'.btn-blue{background:#3b82f6;color:#fff}.btn-blue:hover{background:#2563eb}'
+    +'.btn-grey{background:#eee;color:#333}.btn-grey:hover{background:#ddd}'
+    +'#result-box{display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:20px;margin-top:20px}'
+    +'#result-box h3{font-size:14px;color:#166534;margin-bottom:10px}'
+    +'#result-text{width:100%;min-height:160px;font-family:monospace;font-size:12px;padding:10px;border:1px solid #ddd;border-radius:4px;background:#fff;resize:vertical}'
+    +'</style></head><body>'
+    +'<div class="header"><h1>Advisory Communication Preferences</h1><p>'+company+' &nbsp;·&nbsp; '+date+'</p></div>'
+    +'<div class="container">'
+    +(isPreview?'<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:10px 16px;margin-bottom:16px;font-size:12px;color:#856404">⚠ Preview mode — this is how the form will look to your client.</div>':'')
+    +'<div class="card"><div class="card-title">Your details</div>'
+    +'<div class="client-fields">'
+    +'<div class="field"><label>Your name</label><input type="text" id="client-name" name="client_name" placeholder="e.g. John Smith"></div>'
+    +'<div class="field"><label>Company</label><input type="text" id="client-company" name="client_company" placeholder="e.g. Betstar Ltd"></div>'
+    +'<div class="field"><label>Email address</label><input type="email" id="client-email" name="client_email" placeholder="john@example.com"></div>'
+    +'<div class="field"><label>Preferred Slack channel (if applicable)</label><input type="text" id="client-slack" name="client_slack" placeholder="e.g. #ops-alerts"></div>'
+    +'</div></div>'
+    +(intro?'<div class="card"><div class="intro-box">'+intro.replace(/\n/g,'<br>')+'</div></div>':'')
+    +'<div class="card"><div class="card-title">Advisory templates</div>'
+    +'<table><thead><tr><th>Advisory type</th><th>Description / subject</th><th style="text-align:center">Select</th><th>Channel</th></tr></thead>'
+    +'<tbody>'+formRows+'</tbody></table></div>'
+    +'<div class="submit-bar">'
+    +'<div style="font-size:13px;color:#666">Tick the advisories you wish to receive and choose a delivery channel for each.</div>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button class="btn btn-grey" onclick="clearForm()">Clear all</button>'
+    +'<button class="btn btn-blue" onclick="submitForm()">Submit preferences</button>'
+    +'</div></div>'
+    +'<div id="result-box">'
+    +'<h3>Your preferences summary — copy and email this to '+escAdvHtml(returnEmail||company)+'</h3>'
+    +'<textarea id="result-text" readonly></textarea>'
+    +'<div style="margin-top:10px;display:flex;gap:8px">'
+    +'<button class="btn btn-blue" onclick="copyResult()">Copy to clipboard</button>'
+    +(returnEmail?'<button class="btn btn-grey" onclick="emailResult()">Open in email</button>':'')
+    +'</div></div></div>'
+    +'<script>'
+    +'function clearForm(){'
+    +'  document.querySelectorAll("input[type=checkbox]").forEach(c=>c.checked=false);'
+    +'  document.querySelectorAll("select").forEach(s=>s.value="");'
+    +'}'
+    +'function submitForm(){'
+    +'  const name=document.getElementById("client-name").value.trim();'
+    +'  const company=document.getElementById("client-company").value.trim();'
+    +'  const email=document.getElementById("client-email").value.trim();'
+    +'  const slack=document.getElementById("client-slack").value.trim();'
+    +'  const lines=[];'
+    +'  lines.push("ADVISORY PREFERENCE RESPONSE");'
+    +'  lines.push("================================");'
+    +'  lines.push("From: "+(name||"(not provided)"));'
+    +'  if(company) lines.push("Company: "+company);'
+    +'  if(email) lines.push("Email: "+email);'
+    +'  if(slack) lines.push("Slack channel: "+slack);'
+    +'  lines.push("Date: "+new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"}));'
+    +'  lines.push("");'
+    +'  lines.push("SELECTED ADVISORIES:");'
+    +'  lines.push("--------------------");'
+    +'  let count=0;'
+    +'  document.querySelectorAll("input[type=checkbox]").forEach(cb=>{'
+    +'    if(cb.checked){'
+    +'      const id=cb.id.replace("sel_","");'
+    +'      const channel=document.getElementById("ch_"+id);'
+    +'      const ch=channel?channel.value:"";'
+    +'      const label=cb.closest("tr").querySelector("td:first-child").textContent.trim();'
+    +'      lines.push("  ✓ "+label+(ch?" ["+ch+"]":""));'
+    +'      count++;'
+    +'    }'
+    +'  });'
+    +'  if(!count){alert("Please select at least one advisory.");return;}'
+    +'  lines.push("");'
+    +'  lines.push("Total selected: "+count);'
+    +'  const result=lines.join("\\n");'
+    +'  document.getElementById("result-text").value=result;'
+    +'  document.getElementById("result-box").style.display="block";'
+    +'  document.getElementById("result-box").scrollIntoView({behavior:"smooth"});'
+    +'}'
+    +'function copyResult(){'
+    +'  const ta=document.getElementById("result-text");'
+    +'  ta.select();document.execCommand("copy");'
+    +'  alert("Copied to clipboard!");'
+    +'}'
+    +'function emailResult(){'
+    +'  const body=encodeURIComponent(document.getElementById("result-text").value);'
+    +'  const name=document.getElementById("client-name").value.trim();'
+    +'  window.location.href="mailto:'+escAdvHtml(returnEmail)+'?subject=Advisory+Preference+Response'+('"+(name?"+-+"+encodeURIComponent(name):"")+"&body="+body')
+    +'}'
+    +'<\/script></body></html>';
+}
+
+
+// ─── Advisory Export Builder ─────────────────────────────────────────────────
+
+function aHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function getExportGroups(){
+  const g=[];
+  g.push({id:'uk',label:'Advisory Templates',templates:[...TEMPLATES.uk,...TEMPLATES.new]});
+  g.push({id:'mtc',label:'Mauritius MTC',templates:TEMPLATES.mtc});
+  if(state.customAdvs.length) g.push({id:'custom',label:'Custom Advisories',templates:state.customAdvs.map(a=>({type:a.title||'Advisory',subject:a.notes||'',body:'',_id:a.id}))});
+  return g;
+}
+
+function renderAdvExport(){
+  const groups=getExportGroups();
+  const list=document.getElementById('exp-template-list');
+  if(!list)return;
+  let html='';
+  groups.forEach(function(g){
+    html+='<div class="exp-group-hdr">'+g.label+'</div>';
+    g.templates.forEach(function(t,i){
+      const eid='exp-'+g.id+'-'+i;
+      const tags=g.id==='custom'?[]:getTag(g.id==='uk'?'uk':g.id,t.type);
+      const cb=tags.length?' <span style="font-size:10px;color:var(--accent)">['+tags.join(', ')+']</span>':'';
+      html+='<div class="exp-tpl-row">'
+        +'<input type="checkbox" class="exp-tpl-check" id="'+eid+'" checked>'
+        +'<div class="exp-tpl-body">'
+        +'<div class="exp-tpl-type">'+aHtml(t.type)+cb+'</div>'
+        +(t.subject?'<div class="exp-tpl-subj">'+aHtml(t.subject)+'</div>':'')
+        +'<textarea class="exp-tpl-note" id="note-'+eid+'" placeholder="Add a note for this template (optional)…" rows="1"></textarea>'
+        +'</div></div>';
+    });
+  });
+  list.innerHTML=html||'<div class="empty">No templates</div>';
+  updateExpCount();
+  list.querySelectorAll('.exp-tpl-check').forEach(function(cb){cb.addEventListener('change',updateExpCount);});
+}
+
+function updateExpCount(){
+  const all=document.querySelectorAll('.exp-tpl-check').length;
+  const sel=document.querySelectorAll('.exp-tpl-check:checked').length;
+  const el=document.getElementById('exp-sel-count');
+  if(el)el.textContent=sel+' of '+all+' selected';
+}
+
+function selectAllExport(v){document.querySelectorAll('.exp-tpl-check').forEach(function(cb){cb.checked=v;});updateExpCount();}
+
+function buildAdvExport(){
+  const title=(document.getElementById('exp-title')||{value:''}).value.trim()||'RAS Ops Advisory Templates';
+  const clientName=(document.getElementById('exp-client')||{value:''}).value.trim();
+  const intro=(document.getElementById('exp-intro')||{value:''}).value.trim();
+  const fmtEl=document.querySelector('input[name="exp-format"]:checked');
+  const fmt=fmtEl?fmtEl.value:'full';
+  const date=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const groups=getExportGroups();
+  const sections=[];
+  groups.forEach(function(g){
+    const items=[];
+    g.templates.forEach(function(t,i){
+      const eid='exp-'+g.id+'-'+i;
+      const cb=document.getElementById(eid);
+      if(!cb||!cb.checked)return;
+      const tags=g.id==='custom'?[]:getTag(g.id==='uk'?'uk':g.id,t.type);
+      if(fmt==='tagged'&&!tags.length)return;
+      const note=(document.getElementById('note-'+eid)||{value:''}).value.trim();
+      items.push({type:t.type,subject:t.subject||'',body:t.body||'',note,tags});
+    });
+    if(items.length)sections.push({label:g.label,items:items});
+  });
+  if(!sections.length){alert('No templates selected.');return;}
+  const tagPill=function(tags){return tags.map(function(t){const c=t==='email'?'#3b82f6':t==='slack'?'#22c55e':'#ef4444';return '<span style="background:'+c+';color:#fff;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600;margin-left:4px">'+t.toUpperCase()+'</span>';}).join('');};
+  let h='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+aHtml(title)+'<\/title>'
+    +'<style>body{font-family:Arial,sans-serif;background:#fff;color:#111;padding:40px;max-width:960px;margin:0 auto}'
+    +'h1{font-size:24px;margin-bottom:4px}h2{font-size:15px;font-weight:600;color:#333;margin:28px 0 10px;padding-bottom:6px;border-bottom:2px solid #eee}'
+    +'.meta{font-size:13px;color:#666;margin-bottom:28px}'
+    +'.intro-box{background:#f5f5f5;padding:14px 18px;border-radius:6px;font-size:13px;line-height:1.6;margin-bottom:28px}'
+    +'.tpl{border:1px solid #ddd;border-radius:8px;padding:16px 20px;margin-bottom:14px;page-break-inside:avoid}'
+    +'.tpl-hdr{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px}'
+    +'.tpl-type{font-size:15px;font-weight:700}'
+    +'.tpl-subj{font-size:12px;color:#555;font-style:italic;margin-bottom:10px}'
+    +'.tpl-body{font-size:13px;line-height:1.65;white-space:pre-wrap;background:#f8f8f8;padding:12px;border-radius:4px}'
+    +'.tpl-note{margin-top:10px;padding:8px 12px;background:#fffbe6;border-left:3px solid #f59e0b;font-size:12px;color:#666;font-style:italic}'
+    +'@media print{body{padding:20px}}<\/style><\/head><body>'
+    +'<h1>'+aHtml(title)+'<\/h1>'
+    +'<div class="meta">'+date+(clientName?' &middot; Prepared for: <strong>'+aHtml(clientName)+'<\/strong>':'')+'<\/div>'
+    +(intro?'<div class="intro-box">'+aHtml(intro).replace(/\n/g,'<br>')+'<\/div>':'');
+  sections.forEach(function(sec){
+    h+='<h2>'+sec.label+'<\/h2>';
+    sec.items.forEach(function(t){
+      h+='<div class="tpl"><div class="tpl-hdr"><span class="tpl-type">'+aHtml(t.type)+'<\/span>'+tagPill(t.tags)+'<\/div>';
+      if(t.subject)h+='<div class="tpl-subj">'+aHtml(t.subject)+'<\/div>';
+      if(fmt!=='subjects'&&t.body)h+='<div class="tpl-body">'+aHtml(t.body)+'<\/div>';
+      if(t.note)h+='<div class="tpl-note">Note: '+aHtml(t.note)+'<\/div>';
+      h+='<\/div>';
+    });
+  });
+  h+='<\/body><\/html>';
+  const w=window.open('','_blank');
+  if(w){w.document.write(h);w.document.close();setTimeout(function(){w.print();},400);}
+  toast('Export opened — print or Save as PDF');
+}
+
+// ─── Client Preference Form ───────────────────────────────────────────────────
+
+function renderAdvForm(){renderFormPreview();}
+
+function getFormItems(){
+  const items=[];
+  if(document.getElementById('form-inc-uk')&&document.getElementById('form-inc-uk').checked)
+    [...TEMPLATES.uk,...TEMPLATES.new].forEach(function(t){items.push({group:'Advisory',type:t.type,subject:t.subject||''});});
+  if(document.getElementById('form-inc-mtc')&&document.getElementById('form-inc-mtc').checked)
+    TEMPLATES.mtc.forEach(function(t){items.push({group:'Mauritius MTC',type:t.type,subject:t.subject||''});});
+  if(document.getElementById('form-inc-custom')&&document.getElementById('form-inc-custom').checked)
+    state.customAdvs.forEach(function(a){items.push({group:'Custom',type:a.title||'Advisory',subject:a.notes||''});});
+  return items;
+}
+
+function renderFormPreview(){
+  const items=getFormItems();
+  const el=document.getElementById('form-preview-list');
+  if(!el)return;
+  if(!items.length){el.innerHTML='<div class="empty">No templates selected above</div>';return;}
+  const byGroup={};
+  items.forEach(function(t){if(!byGroup[t.group])byGroup[t.group]=[];byGroup[t.group].push(t);});
+  el.innerHTML=Object.entries(byGroup).map(function(e){
+    const g=e[0],ts=e[1];
+    return '<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--accent);margin-bottom:4px">'+g+' ('+ts.length+')</div>'
+      +ts.map(function(t){return '<div style="padding:2px 0;color:var(--text)">✓ '+aHtml(t.type)+'</div>';}).join('')+'</div>';
+  }).join('');
+}
+
+function generateClientForm(){
+  const html=buildClientFormHtml();
+  const blob=new Blob([html],{type:'text/html'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='advisory-preference-form-'+new Date().toISOString().slice(0,10)+'.html';
+  a.click();
+  toast('Form downloaded — send this HTML file to your client');
+}
+
+function previewClientForm(){
+  const html=buildClientFormHtml();
+  const w=window.open('','_blank');
+  if(w){w.document.write(html);w.document.close();}
+}
+
+function buildClientFormHtml(){
+  const company=(document.getElementById('form-company')||{value:''}).value.trim()||'Racing and Sports PLC';
+  const returnEmail=(document.getElementById('form-email')||{value:''}).value.trim();
+  const intro=(document.getElementById('form-intro')||{value:''}).value.trim();
+  const items=getFormItems();
+  const date=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const byGroup={};
+  items.forEach(function(t){if(!byGroup[t.group])byGroup[t.group]=[];byGroup[t.group].push(t);});
+
+  let rows='';
+  Object.entries(byGroup).forEach(function(e){
+    const g=e[0],ts=e[1];
+    rows+='<tr><td colspan="4" style="background:#eef2ff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#3730a3;padding:9px 14px">'+g+'<\/td><\/tr>';
+    ts.forEach(function(t,i){
+      const id=g.replace(/\s/g,'_')+'_'+i;
+      rows+='<tr><td style="padding:10px 14px;font-size:13px;font-weight:500">'+t.type+'<\/td>'
+        +'<td style="padding:10px 14px;font-size:12px;color:#666;font-style:italic;max-width:250px">'+t.subject+'<\/td>'
+        +'<td style="padding:10px 14px;text-align:center"><input type="checkbox" id="sel_'+id+'" name="sel_'+id+'" style="width:18px;height:18px;accent-color:#3b82f6"><\/td>'
+        +'<td style="padding:8px 10px"><select id="ch_'+id+'" name="ch_'+id+'" style="font-size:12px;padding:5px 8px;border:1px solid #ddd;border-radius:5px;width:100%"><option value="">Channel<\/option><option value="Email">Email<\/option><option value="Slack">Slack<\/option><option value="Both">Both<\/option><\/select><\/td><\/tr>';
+    });
+  });
+
+  const inlineJs="function clearForm(){document.querySelectorAll('input[type=checkbox]').forEach(function(c){c.checked=false;});document.querySelectorAll('select').forEach(function(s){s.value='';});}function submitForm(){var name=document.getElementById('client-name').value.trim();var co=document.getElementById('client-company').value.trim();var em=document.getElementById('client-email').value.trim();var sl=document.getElementById('client-slack').value.trim();var lines=[];lines.push('ADVISORY PREFERENCE RESPONSE');lines.push('================================');lines.push('From: '+(name||'(not provided)'));if(co)lines.push('Company: '+co);if(em)lines.push('Email: '+em);if(sl)lines.push('Slack: '+sl);lines.push('Date: '+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}));lines.push('');lines.push('SELECTED ADVISORIES:');lines.push('--------------------');var count=0;document.querySelectorAll('input[type=checkbox]').forEach(function(cb){if(cb.checked){var id=cb.id.replace('sel_','');var ch=document.getElementById('ch_'+id);var row=cb.closest('tr');var label=row?row.cells[0].textContent.trim():cb.id;lines.push('  ✓ '+label+(ch&&ch.value?' ['+ch.value+']':''));count++;}});if(!count){alert('Please select at least one advisory.');return;}lines.push('');lines.push('Total selected: '+count);var txt=lines.join('\\n');document.getElementById('result-text').value=txt;document.getElementById('result-box').style.display='block';document.getElementById('result-box').scrollIntoView({behavior:'smooth'});}function copyResult(){var ta=document.getElementById('result-text');ta.select();try{document.execCommand('copy');}catch(e){}alert('Copied to clipboard!');}";
+
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Advisory Preferences — '+company+'<\/title>'
+    +'<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;background:#f7f9fc;color:#111}'
+    +'.hdr{background:#1e3a5f;color:#fff;padding:28px 40px}.hdr h1{font-size:22px;margin-bottom:4px}.hdr p{font-size:13px;opacity:.8}'
+    +'.wrap{max-width:960px;margin:30px auto;padding:0 20px}'
+    +'.card{background:#fff;border:1px solid #dde3ef;border-radius:8px;margin-bottom:20px}'
+    +'.ct{font-size:14px;font-weight:700;padding:14px 20px;border-bottom:1px solid #eee}'
+    +'.fields{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px 20px}'
+    +'.fl label{font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px}'
+    +'.fl input{width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:5px;font-size:13px}'
+    +'.fl input:focus{outline:none;border-color:#3b82f6}'
+    +'table{width:100%;border-collapse:collapse}'
+    +'th{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#666;padding:10px 14px;border-bottom:2px solid #eee;text-align:left;background:#fafafa}'
+    +'th:nth-child(3){width:70px;text-align:center}th:nth-child(4){width:130px}'
+    +'tr:hover td{background:#fafeff}'
+    +'.bar{background:#fff;border:1px solid #dde3ef;border-radius:8px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}'
+    +'.btn{padding:10px 22px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer}'
+    +'.bp{background:#3b82f6;color:#fff}.bp:hover{background:#2563eb}'
+    +'.bg{background:#eee;color:#333}.bg:hover{background:#ddd}'
+    +'#rb{display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:20px;margin-top:20px}'
+    +'#rb h3{font-size:14px;color:#166534;margin-bottom:10px}'
+    +'#rt{width:100%;min-height:160px;font-family:monospace;font-size:12px;padding:10px;border:1px solid #ddd;border-radius:4px;resize:vertical}'
+    +'<\/style><\/head><body>'
+    +'<div class="hdr"><h1>Advisory Communication Preferences<\/h1><p>'+company+' &nbsp;&middot;&nbsp; '+date+'<\/p><\/div>'
+    +'<div class="wrap">'
+    +'<div class="card"><div class="ct">Your details<\/div><div class="fields">'
+    +'<div class="fl"><label>Full name<\/label><input type="text" id="client-name" placeholder="e.g. John Smith"><\/div>'
+    +'<div class="fl"><label>Company<\/label><input type="text" id="client-company" placeholder="e.g. Betstar Ltd"><\/div>'
+    +'<div class="fl"><label>Email address<\/label><input type="email" id="client-email" placeholder="john@example.com"><\/div>'
+    +'<div class="fl"><label>Slack channel (if applicable)<\/label><input type="text" id="client-slack" placeholder="#ops-alerts"><\/div>'
+    +'<\/div><\/div>'
+    +(intro?'<div class="card"><div style="padding:16px 20px;font-size:13px;line-height:1.7;color:#444">'+intro.replace(/\n/g,'<br>')+'<\/div><\/div>':'')
+    +'<div class="card"><div class="ct">Advisory templates — tick what you need<\/div>'
+    +'<table><thead><tr><th>Advisory type<\/th><th>Description<\/th><th style="text-align:center">Select<\/th><th>Channel<\/th><\/tr><\/thead>'
+    +'<tbody>'+rows+'<\/tbody><\/table><\/div>'
+    +'<div class="bar"><span style="font-size:13px;color:#666">Tick the advisories you want and choose a channel for each.<\/span>'
+    +'<div style="display:flex;gap:8px"><button class="btn bg" onclick="clearForm()">Clear all<\/button><button class="btn bp" onclick="submitForm()">Submit preferences<\/button><\/div><\/div>'
+    +'<div id="rb"><h3>Your preferences — copy and email to '+(returnEmail?returnEmail:company)+'<\/h3>'
+    +'<textarea id="rt" readonly><\/textarea>'
+    +'<div style="margin-top:10px;display:flex;gap:8px"><button class="btn bp" onclick="copyResult()">Copy to clipboard<\/button>'
+    +(returnEmail?'<button class="btn bg" onclick="window.location.href=\'mailto:'+returnEmail+'?subject=Advisory+Preference+Response&body=\'+encodeURIComponent(document.getElementById(\'rt\').value)">Open in email<\/button>':'')
+    +'<\/div><\/div><\/div>'
+    +'<script>'+inlineJs+'<\/script><\/body><\/html>';
 }
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
