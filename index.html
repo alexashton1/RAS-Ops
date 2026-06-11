@@ -165,6 +165,43 @@ pre{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rad
 .hub-row .hub-input{flex:1}
 .contact-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
 .contact-row:last-child{border:none}
+
+/* ── Client Hub ───────────────────────────────────────── */
+.hub-tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;align-items:center}
+.hub-tab{padding:7px 18px;border-radius:20px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:13px;transition:all .15s}
+.hub-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.client-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:18px}
+.client-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+.client-name{font-size:17px;font-weight:600;color:var(--text)}
+.client-meta{font-size:12px;color:var(--text3)}
+.hub-section{margin-bottom:18px}
+.hub-section-title{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.hub-section-title span{font-size:10px;font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0}
+.note-entry{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:6px}
+.note-date{font-size:10px;color:var(--text3);margin-bottom:4px}
+.note-body{font-size:13px;line-height:1.5;color:var(--text)}
+.ap-item{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);margin-bottom:6px;font-size:13px}
+.ap-check{flex-shrink:0;width:16px;height:16px;margin-top:2px;cursor:pointer;accent-color:var(--accent)}
+.ap-item.done .ap-text{text-decoration:line-through;color:var(--text3)}
+.ap-meta{font-size:10px;color:var(--text3);margin-top:2px}
+.ap-del{margin-left:auto;cursor:pointer;color:var(--text3);font-size:14px;padding:0 4px;flex-shrink:0}
+.ap-del:hover{color:var(--danger)}
+.health-bar{display:flex;gap:6px;flex-wrap:wrap}
+.health-pill{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all .15s}
+.health-green{background:#052e16;color:#22c55e;border-color:#166534}
+.health-amber{background:#451a03;color:#f59e0b;border-color:#92400e}
+.health-red{background:#450a0a;color:#ef4444;border-color:#7f1d1d}
+.health-active{outline:2px solid #fff;outline-offset:2px}
+.linked-issues .li-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)}
+.linked-issues .li-row:last-child{border:none}
+.hub-textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:10px;font-size:13px;font-family:inherit;resize:vertical;min-height:72px;box-sizing:border-box}
+.hub-textarea:focus{outline:none;border-color:var(--accent)}
+.hub-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 10px;font-size:13px;font-family:inherit;box-sizing:border-box}
+.hub-input:focus{outline:none;border-color:var(--accent)}
+.hub-row{display:flex;gap:8px;align-items:flex-end;margin-bottom:8px;flex-wrap:wrap}
+.hub-row .hub-input{flex:1;min-width:80px}
+.contact-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.contact-row:last-child{border:none}
 </style>
 </head>
 <body>
@@ -255,6 +292,24 @@ pre{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rad
     <!-- HUB: SaaS -->
     <div class="page" id="page-hub-saas">
       <div class="hub-tabs" id="htabs-saas"><button class="hub-tab active" onclick="switchClient('saas','Altenar',this)">Altenar</button><button class="hub-tab" onclick="switchClient('saas','Playbook',this)">Playbook</button><button class="hub-tab" onclick="switchClient('saas','Swifty Gaming',this)">Swifty Gaming</button><button class="hub-tab" onclick="switchClient('saas','Pragmatic Play',this)">Pragmatic Play</button></div>
+      <div id="hub-content-saas"></div>
+    </div>
+
+    <!-- HUB: MTS -->
+    <div class="page" id="page-hub-mts">
+      <div class="hub-tabs" id="htabs-mts" data-active="Stakemate"><button class="hub-tab active" onclick="switchClient('mts',this)">Stakemate</button><button class="hub-tab" onclick="switchClient('mts',this)">Laserbet</button><button class="hub-tab" style="margin-left:auto;font-size:11px" onclick="openAddClient('mts')">+ Add client</button></div>
+      <div id="hub-content-mts"></div>
+    </div>
+
+    <!-- HUB: BetBridge -->
+    <div class="page" id="page-hub-betbridge">
+      <div class="hub-tabs" id="htabs-betbridge" data-active="UPC"><button class="hub-tab active" onclick="switchClient('betbridge',this)">UPC</button><button class="hub-tab" onclick="switchClient('betbridge',this)">Fairplay</button><button class="hub-tab" onclick="switchClient('betbridge',this)">Phoenix</button><button class="hub-tab" onclick="switchClient('betbridge',this)">Expat</button><button class="hub-tab" style="margin-left:auto;font-size:11px" onclick="openAddClient('betbridge')">+ Add client</button></div>
+      <div id="hub-content-betbridge"></div>
+    </div>
+
+    <!-- HUB: SaaS -->
+    <div class="page" id="page-hub-saas">
+      <div class="hub-tabs" id="htabs-saas" data-active="Altenar"><button class="hub-tab active" onclick="switchClient('saas',this)">Altenar</button><button class="hub-tab" onclick="switchClient('saas',this)">Playbook</button><button class="hub-tab" onclick="switchClient('saas',this)">Swifty Gaming</button><button class="hub-tab" onclick="switchClient('saas',this)">Pragmatic Play</button><button class="hub-tab" style="margin-left:auto;font-size:11px" onclick="openAddClient('saas')">+ Add client</button></div>
       <div id="hub-content-saas"></div>
     </div>
     <!-- JIRA IMPORT -->
@@ -389,8 +444,7 @@ pre{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rad
         <button class="btn-primary" onclick="openNewAdv()">+ New advisory</button>
       </div>
       <div class="adv-tabs">
-        <button class="adv-tab active" onclick="switchAdvTab('uk',this)">UK Ops <span id="tc-uk"></span></button>
-        <button class="adv-tab" onclick="switchAdvTab('new',this)">New clients <span id="tc-new"></span></button>
+        <button class="adv-tab active" onclick="switchAdvTab('uk',this)">Advisory <span id="tc-uk"></span></button>
         <button class="adv-tab" onclick="switchAdvTab('mtc',this)">Mauritius MTC <span id="tc-mtc"></span></button>
         <button class="adv-tab" onclick="switchAdvTab('custom',this)">Custom <span id="tc-custom"></span></button>
       </div>
@@ -425,7 +479,7 @@ pre{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rad
           <button class="abtn" onclick="copyStats()">Copy to clipboard</button>
           <button class="abtn" onclick="exportIssues()" style="margin-left:4px">Export issues CSV</button>
           <button class="abtn" onclick="exportTagged()" style="margin-left:4px">Export tagged advisories CSV</button>
-          <button class="abtn" onclick="exportAdvReport()" style="margin-left:4px">Advisory report PDF</button>
+          <button class="abtn" onclick="exportAdvReport()" style="margin-left:4px">Advisory report (PDF)</button>
         </div>
         <pre id="stats-prev"></pre>
       </div>
@@ -454,9 +508,9 @@ pre{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rad
 <!-- Add client modal -->
 <div class="modal-overlay" id="add-client-modal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal">
-    <h3>Add client to hub</h3>
+    <h3>Add client</h3>
     <input type="hidden" id="add-client-hub">
-    <div class="modal-row"><label>Client name *</label><input id="add-client-name" placeholder="e.g. BetStar"></div>
+    <div class="modal-row"><label>Client name *</label><input id="add-client-name" placeholder="e.g. BetStar" onkeydown="if(event.key==='Enter')saveNewClient()"></div>
     <div class="modal-footer">
       <button class="btn-ghost" onclick="document.getElementById('add-client-modal').classList.remove('open')">Cancel</button>
       <button class="btn-primary" onclick="saveNewClient()">Add client</button>
@@ -523,6 +577,7 @@ const state = {
   manualTickets: saved ? saved.manualTickets : [],
   muManual: saved ? saved.muManual : [],
   manualChallenges: saved ? saved.manualChallenges : [],
+  clientHubs: saved ? saved.clientHubs : {},
   clientHubs: saved ? saved.clientHubs : {},
   csvHeaders: [],
   csvPending: [],
@@ -742,7 +797,7 @@ function renderAdvTab(){
     document.getElementById('tc-custom').textContent=state.customAdvs.length;
     return;
   }
-  const templates=TEMPLATES[tab]||[];
+  const templates=tab==='uk'?[...TEMPLATES.uk,...TEMPLATES.new]:(TEMPLATES[tab]||[]);
   const f=templates.filter(t=>{
     if(s&&!(t.type+t.subject+(t.body||'')).toLowerCase().includes(s))return false;
     const tags=getTag(tab,t.type);
@@ -753,8 +808,7 @@ function renderAdvTab(){
     return true;
   });
   el.innerHTML=f.length?f.map(t=>templateCard(t,tab)).join(''):'<div class="empty">No templates match</div>';
-  document.getElementById('tc-uk').textContent=TEMPLATES.uk.length;
-  document.getElementById('tc-new').textContent=TEMPLATES.new.length;
+  document.getElementById('tc-uk').textContent=TEMPLATES.uk.length+TEMPLATES.new.length;
   document.getElementById('tc-mtc').textContent=TEMPLATES.mtc.length;
 }
 
@@ -768,7 +822,7 @@ function templateCard(t,tab){
   const tagClasses=(hasEmail?'tagged-email ':'')+(hasSlack?'tagged-slack ':'')+(hasNosend?'tagged-nosend ':'');
   const tagBadges=(hasEmail?'<span class="badge bi" style="margin-left:4px">Email</span>':'')+(hasSlack?'<span class="badge bsu" style="margin-left:4px">Slack</span>':'')+(hasNosend?'<span class="badge bd" style="margin-left:4px">Don\'t send</span>':'');
   const whoBadge=t.who?`<span class="badge bnn" style="font-size:10px;margin-left:4px">${t.who}</span>`:'';
-  const typeLabel=tab==='mtc'?'MTC':tab==='new'?'NEW':'UK';
+  const typeLabel=tab==='mtc'?'MTC':'ADV';
   const te=t.type.replace(/'/g,"\\'");
   return`<div class="tcard ${tagClasses.trim()}" id="${id}"><div class="tcard-hdr" onclick="toggleTpl('${id}','${tab}')"><span class="badge bnn" style="font-size:10px;flex-shrink:0">${typeLabel}</span><span class="tcard-type" style="margin-left:8px">${t.type}</span>${whoBadge}${tagBadges}<span class="tcard-subj">${t.subject}</span><span style="margin-left:6px;flex-shrink:0;font-size:12px;color:var(--text3)">${isOpen?'&#9650;':'&#9660;'}</span></div><div class="tcard-body${isOpen?' open':''}" id="body-${id}"><div class="tfield"><label>Subject line</label><div class="tv">${t.subject}</div></div><div class="tfield"><label>Message body</label><div class="tv">${(t.body||'').replace(/\n/g,'<br>')}</div></div>${t.example?`<div class="tfield"><label>Mauritius example</label><div class="tv" style="color:var(--text2)">${t.example}</div></div>`:''}<div class="triage-bar"><span class="triage-label">Send via:</span><button class="tbtn-email${hasEmail?' active-tag':''}" onclick="setTag('${tab}','${te}','email');event.stopPropagation()">&#9993; Email</button><button class="tbtn-slack${hasSlack?' active-tag':''}" onclick="setTag('${tab}','${te}','slack');event.stopPropagation()">&#9737; Slack</button><button class="tbtn-nosend${hasNosend?' active-tag':''}" onclick="setTag('${tab}','${te}','nosend');event.stopPropagation()">&#10005; Don't send</button>${tags.length?`<button class="clear-btn" onclick="setTag('${tab}','${te}',null);event.stopPropagation()">Clear all</button>`:''}</div></div></div>`;
 }
@@ -791,7 +845,7 @@ function renderTaggedPage(tagVal,elId){
   state.customAdvs.filter(a=>a.tag===tagVal).forEach(a=>results.push({...a,isTemplate:false}));
   if(!results.length){el.innerHTML='<div class="empty">Nothing tagged for this channel yet - go to All Advisories to triage your templates</div>';return;}
   el.innerHTML=results.map(r=>{
-    if(r.isTemplate){const tl=r.tab==='mtc'?'MTC':r.tab==='new'?'NEW':'UK';const te=r.type.replace(/'/g,"\\'");return`<div class="card" style="margin-bottom:10px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span class="badge bnn" style="font-size:10px">${tl}</span><span style="font-size:13px;font-weight:600">${r.type}</span></div><div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500">${r.subject}</div><div style="font-size:12px;line-height:1.55;white-space:pre-wrap;background:var(--bg3);padding:10px;border-radius:var(--radius);border:1px solid var(--border)">${r.body||''}</div><div style="margin-top:10px"><button class="abtn" onclick="setTag('${r.tab}','${te}','${tagVal}');renderTaggedPage('${tagVal}','${elId}')">Remove from this channel</button></div></div>`;}
+    if(r.isTemplate){const tl=r.tab==='mtc'?'MTC':'ADV';const te=r.type.replace(/'/g,"\\'");return`<div class="card" style="margin-bottom:10px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span class="badge bnn" style="font-size:10px">${tl}</span><span style="font-size:13px;font-weight:600">${r.type}</span></div><div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500">${r.subject}</div><div style="font-size:12px;line-height:1.55;white-space:pre-wrap;background:var(--bg3);padding:10px;border-radius:var(--radius);border:1px solid var(--border)">${r.body||''}</div><div style="margin-top:10px"><button class="abtn" onclick="setTag('${r.tab}','${te}','${tagVal}');renderTaggedPage('${tagVal}','${elId}')">Remove from this channel</button></div></div>`;}
     else{return`<div class="acard"><div class="acard-body"><div class="acard-title">${r.title}</div><div class="acard-meta">${r.category} - ${r.clients||'All'} - ${r.date}</div>${r.notes?`<div style="font-size:11px;color:var(--text3);margin-top:4px">${r.notes.substring(0,100)}...</div>`:''}</div></div>`;}
   }).join('');
 }
@@ -810,7 +864,7 @@ function saveCustomAdv(){
   updateCounts();
   state.activeAdvTab='custom';
   document.querySelectorAll('.adv-tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.adv-tab')[3]&&document.querySelectorAll('.adv-tab')[3].classList.add('active');
+  document.querySelectorAll('.adv-tab')[2]&&document.querySelectorAll('.adv-tab')[2].classList.add('active');
   renderAdvTab();
   toast('Advisory saved');
 }
@@ -832,7 +886,7 @@ function renderReports(){
 function copyStats(){renderReports();const t=document.getElementById('stats-prev').textContent;if(navigator.clipboard){navigator.clipboard.writeText(t).then(()=>toast('Stats copied'));}else{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Copied');}}
 
 function exportIssues(){const all=allIssues();const rows=[['Key','Summary','Assignee','Reporter','Status','Priority','Client','Type','Created'],...all.map(i=>[i.id,i.summary,i.assignee,i.reporter,i.status,i.priority,i.client,i.issueType,i.created])];const csv=rows.map(r=>r.map(c=>'"'+(c||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='uk-incidents-'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('Exported');}
-function exportTagged(){const rows=[['Template','Tab','Subject','Channel']];['uk','new','mtc'].forEach(tab=>{TEMPLATES[tab].forEach(t=>{const tag=getTag(tab,t.type);if(tag)rows.push([t.type,tab,t.subject,tag]);});});state.customAdvs.filter(a=>a.tag).forEach(a=>rows.push([a.title,'custom','',a.tag]));const csv=rows.map(r=>r.map(c=>'"'+(c||'').replace(/"/g,'""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='tagged-advisories-'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('Exported');}
+function exportTagged(){const rows=[['Template','Tab','Subject','Channel']];['uk','mtc'].forEach(tab=>{const tpls=tab==='uk'?[...TEMPLATES.uk,...TEMPLATES.new]:TEMPLATES[tab];tpls.forEach(t=>{const tag=getTag(tab,t.type);if(tag&&tag.length)rows.push([t.type,tab,t.subject,Array.isArray(tag)?tag.join('+'):tag]);});});state.customAdvs.filter(a=>a.tag).forEach(a=>rows.push([a.title,'custom','',a.tag]));const csv=rows.map(r=>r.map(c=>'"'+(c||'').replace(/"/g,'""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='tagged-advisories-'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('Exported');}
 
 // ─── CSV Import ───────────────────────────────────────────────────────────────
 function handleCSV(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>{const text=ev.target.result;const lines=text.split(/\r?\n/).filter(l=>l.trim());const pr=row=>{const r=[];let cur='',inQ=false;for(let i=0;i<row.length;i++){const c=row[i];if(c==='"'&&!inQ)inQ=true;else if(c==='"'&&inQ&&row[i+1]==='"'){cur+='"';i++;}else if(c==='"'&&inQ)inQ=false;else if(c===','&&!inQ){r.push(cur.trim());cur='';}else cur+=c;}r.push(cur.trim());return r;};const headers=pr(lines[0]);state.csvHeaders=headers;state.csvPending=lines.slice(1).map(l=>{const o={};headers.forEach((h,i)=>o[h]=pr(l)[i]||'');return o;});document.getElementById('csv-prev-card').style.display='block';document.getElementById('prev-cnt').textContent=`${state.csvPending.length} rows, ${headers.length} columns`;const t=document.getElementById('prev-tbl');t.innerHTML='<thead><tr>'+headers.slice(0,8).map(h=>`<th>${h}</th>`).join('')+'</tr></thead><tbody>'+state.csvPending.slice(0,5).map(r=>'<tr>'+headers.slice(0,8).map(h=>`<td>${(r[h]||'').substring(0,28)}</td>`).join('')+'</tr>').join('')+'</tbody>';document.getElementById('imp-status').textContent=`Detected ${state.csvPending.length} issues across ${headers.length} columns.`;};reader.readAsText(file);}
@@ -862,6 +916,228 @@ function resetToSample(){
 
 
 // ─── Client Hubs ─────────────────────────────────────────────────────────────
+const HUB_CLIENTS = {
+  mts: ['Stakemate','Laserbet'],
+  betbridge: ['UPC','Fairplay','Phoenix','Expat'],
+  saas: ['Altenar','Playbook','Swifty Gaming','Pragmatic Play']
+};
+
+function hubKey(hub, client) { return hub + '::' + client; }
+
+function getHub(hub, client) {
+  const k = hubKey(hub, client);
+  if (!state.clientHubs[k]) state.clientHubs[k] = {
+    health: 'green',
+    notes: [],
+    actions: [],
+    contacts: [],
+    tier: '',
+    linkedIssues: []
+  };
+  return state.clientHubs[k];
+}
+
+function renderHub(hub) {
+  const clients = HUB_CLIENTS[hub];
+  // find active tab
+  const tabEl = document.querySelector(`#htabs-${hub} .hub-tab.active`);
+  const active = tabEl ? tabEl.textContent.trim() : clients[0];
+  renderClientHub(hub, active);
+}
+
+function switchClient(hub, client, el) {
+  document.querySelectorAll(`#htabs-${hub} .hub-tab`).forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderClientHub(hub, client);
+}
+
+function renderClientHub(hub, client) {
+  const d = getHub(hub, client);
+  const issues = allIssues().filter(i => (i.client||'').toLowerCase() === client.toLowerCase());
+  const openIssues = issues.filter(i => !['resolved','done','compliant'].includes((i.status||'').toLowerCase()));
+
+  const healthColors = {green:'health-green',amber:'health-amber',red:'health-red'};
+  const healthLabels = {green:'Healthy',amber:'Needs Attention',red:'At Risk'};
+
+  const notesHtml = d.notes.length
+    ? d.notes.slice().reverse().map((n,ri) => {
+        const i = d.notes.length - 1 - ri;
+        return `<div class="note-entry"><div class="note-date">${n.date} ${n.time||''}</div><div class="note-body">${escHtml(n.text)}</div><div style="margin-top:6px;display:flex;gap:6px"><button class="btn-ghost" style="font-size:11px;padding:3px 8px" onclick="deleteNote('${hub}','${client}',${i})">Delete</button></div></div>`;
+      }).join('')
+    : '<div class="empty" style="padding:8px 0">No call notes yet</div>';
+
+  const actionsHtml = d.actions.length
+    ? d.actions.map((a,i) => `<div class="ap-item${a.done?' done':''}"><input type="checkbox" class="ap-check" ${a.done?'checked':''} onchange="toggleAction('${hub}','${client}',${i})"><div style="flex:1"><div class="ap-text">${escHtml(a.text)}</div><div class="ap-meta">${a.due?'Due: '+a.due:''} ${a.owner?'· Owner: '+a.owner:''}</div></div><span class="ap-del" onclick="deleteAction('${hub}','${client}',${i})">✕</span></div>`).join('')
+    : '<div class="empty" style="padding:8px 0">No action points yet</div>';
+
+  const contactsHtml = d.contacts.length
+    ? d.contacts.map((c,i) => `<div class="contact-row"><div><strong>${escHtml(c.name)}</strong> <span style="color:var(--text3);font-size:11px">${escHtml(c.role)}</span><br><span style="font-size:11px;color:var(--text2)">${escHtml(c.email)} ${c.phone?'· '+c.phone:''}</span></div><button class="btn-ghost" style="font-size:11px;padding:3px 8px" onclick="deleteContact('${hub}','${client}',${i})">Remove</button></div>`).join('')
+    : '<div style="font-size:12px;color:var(--text3);padding:4px 0">No contacts added</div>';
+
+  const linkedHtml = openIssues.length
+    ? `<div class="linked-issues">${openIssues.slice(0,8).map(i=>`<div class="li-row"><span style="font-family:monospace;font-size:11px;color:var(--text3)">${i.id}</span>${sb(i.status)}<span style="flex:1;font-size:12px">${escHtml(i.summary.substring(0,55))}</span>${pb(i.priority)}</div>`).join('')}</div>`
+    : '<div class="empty" style="padding:6px 0;font-size:12px">No open issues linked to this client</div>';
+
+  document.getElementById('hub-content-'+hub).innerHTML = `
+  <div class="client-card">
+    <div class="client-header">
+      <div>
+        <div class="client-name">${client}</div>
+        <div class="client-meta">${d.tier?'Tier: '+d.tier:''}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="hub-section-title" style="margin-bottom:4px">Account health</div>
+        <div class="health-bar">
+          ${['green','amber','red'].map(h=>`<span class="health-pill ${healthColors[h]}${d.health===h?' health-active':''}" onclick="setHealth('${hub}','${client}','${h}')">${healthLabels[h]}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <div class="hub-section-title">Tier / Plan</div>
+      <input class="hub-input" placeholder="e.g. Enterprise, Premium…" value="${escHtml(d.tier||'')}" onchange="setHubField('${hub}','${client}','tier',this.value)">
+    </div>
+
+    <!-- Call Notes -->
+    <div class="hub-section">
+      <div class="hub-section-title">Call notes <span>logged in reverse order</span></div>
+      <div class="hub-row">
+        <textarea class="hub-textarea" id="note-input-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Log a call note…" rows="3"></textarea>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <button class="btn-primary" style="font-size:12px" onclick="addNote('${hub}','${client}')">Add note</button>
+      </div>
+      <div id="notes-list-${hub}-${client.replace(/\s+/g,'_')}">${notesHtml}</div>
+    </div>
+
+    <!-- Action Points -->
+    <div class="hub-section">
+      <div class="hub-section-title">Action points</div>
+      <div class="hub-row">
+        <input class="hub-input" id="ap-text-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Action item…">
+        <input class="hub-input" style="width:130px;flex:none" type="date" id="ap-due-${hub}-${client.replace(/\s+/g,'_')}">
+        <input class="hub-input" style="width:120px;flex:none" id="ap-owner-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Owner">
+        <button class="btn-primary" style="white-space:nowrap;flex:none;font-size:12px" onclick="addAction('${hub}','${client}')">Add</button>
+      </div>
+      <div id="actions-list-${hub}-${client.replace(/\s+/g,'_')}">${actionsHtml}</div>
+    </div>
+
+    <!-- Contacts -->
+    <div class="hub-section">
+      <div class="hub-section-title">Key contacts</div>
+      <div class="hub-row" style="flex-wrap:wrap">
+        <input class="hub-input" id="ct-name-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Name" style="flex:1;min-width:100px">
+        <input class="hub-input" id="ct-role-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Role" style="flex:1;min-width:100px">
+        <input class="hub-input" id="ct-email-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Email" style="flex:1;min-width:120px">
+        <input class="hub-input" id="ct-phone-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Phone" style="flex:0 0 110px">
+        <button class="btn-primary" style="white-space:nowrap;flex:none;font-size:12px" onclick="addContact('${hub}','${client}')">Add</button>
+      </div>
+      <div id="contacts-list-${hub}-${client.replace(/\s+/g,'_')}">${contactsHtml}</div>
+    </div>
+
+    <!-- Linked Issues -->
+    <div class="hub-section">
+      <div class="hub-section-title">Open issues <span>(matched from Jira import by client name)</span></div>
+      ${linkedHtml}
+    </div>
+  </div>
+  `;
+}
+
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function setHealth(hub, client, h) {
+  const d = getHub(hub, client);
+  d.health = h;
+  saveState();
+  renderClientHub(hub, client);
+}
+
+function setHubField(hub, client, field, val) {
+  const d = getHub(hub, client);
+  d[field] = val;
+  saveState();
+}
+
+function addNote(hub, client) {
+  const k = client.replace(/\s+/g, '_');
+  const ta = document.getElementById('note-input-'+hub+'-'+k);
+  const text = ta.value.trim();
+  if (!text) return;
+  const d = getHub(hub, client);
+  const now = new Date();
+  d.notes.push({
+    text,
+    date: now.toLocaleDateString(),
+    time: now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
+  });
+  ta.value = '';
+  saveState();
+  renderClientHub(hub, client);
+  toast('Note added');
+}
+
+function deleteNote(hub, client, i) {
+  const d = getHub(hub, client);
+  d.notes.splice(i, 1);
+  saveState();
+  renderClientHub(hub, client);
+}
+
+function addAction(hub, client) {
+  const k = client.replace(/\s+/g, '_');
+  const text = document.getElementById('ap-text-'+hub+'-'+k).value.trim();
+  if (!text) return;
+  const due = document.getElementById('ap-due-'+hub+'-'+k).value;
+  const owner = document.getElementById('ap-owner-'+hub+'-'+k).value.trim();
+  const d = getHub(hub, client);
+  d.actions.push({text, due, owner, done: false, created: new Date().toLocaleDateString()});
+  document.getElementById('ap-text-'+hub+'-'+k).value = '';
+  document.getElementById('ap-due-'+hub+'-'+k).value = '';
+  document.getElementById('ap-owner-'+hub+'-'+k).value = '';
+  saveState();
+  renderClientHub(hub, client);
+  toast('Action added');
+}
+
+function toggleAction(hub, client, i) {
+  const d = getHub(hub, client);
+  d.actions[i].done = !d.actions[i].done;
+  saveState();
+  renderClientHub(hub, client);
+}
+
+function deleteAction(hub, client, i) {
+  const d = getHub(hub, client);
+  d.actions.splice(i, 1);
+  saveState();
+  renderClientHub(hub, client);
+}
+
+function addContact(hub, client) {
+  const k = client.replace(/\s+/g, '_');
+  const name = document.getElementById('ct-name-'+hub+'-'+k).value.trim();
+  if (!name) return;
+  const role = document.getElementById('ct-role-'+hub+'-'+k).value.trim();
+  const email = document.getElementById('ct-email-'+hub+'-'+k).value.trim();
+  const phone = document.getElementById('ct-phone-'+hub+'-'+k).value.trim();
+  const d = getHub(hub, client);
+  d.contacts.push({name, role, email, phone});
+  ['name','role','email','phone'].forEach(f => document.getElementById('ct-'+f+'-'+hub+'-'+k).value = '');
+  saveState();
+  renderClientHub(hub, client);
+  toast('Contact added');
+}
+
+function deleteContact(hub, client, i) {
+  const d = getHub(hub, client);
+  d.contacts.splice(i, 1);
+  saveState();
+  renderClientHub(hub, client);
+}
+
+
+// ─── Client Hubs ─────────────────────────────────────────────────────────────
 
 const HUB_DEFAULTS = {
   mts: ['Stakemate','Laserbet'],
@@ -879,26 +1155,26 @@ function getClientData(hub, client) {
   return state.clientHubs[k];
 }
 
+function hubEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
 function renderHub(hub) {
-  const el = document.getElementById('hub-content-'+hub);
-  if (!el) return;
-  const clients = getHubClients(hub);
   const tabsEl = document.getElementById('htabs-'+hub);
-  let active = (tabsEl && tabsEl.dataset.active) ? tabsEl.dataset.active : (clients[0]||'');
-  // ensure active is still valid
-  if (!clients.includes(active)) active = clients[0]||'';
-  if (tabsEl) {
-    tabsEl.dataset.active = active;
-    tabsEl.innerHTML = clients.map(c =>
-      `<button class="hub-tab${c===active?' active':''}" onclick="switchClient('${hub}','${c.replace(/'/g,"\\'")}',this)">${c}</button>`
-    ).join('') +
-    `<button class="hub-tab" style="margin-left:auto;font-size:11px" onclick="openAddClient('${hub}')">+ Add client</button>`;
-  }
-  if (!active) { el.innerHTML = '<div class="empty">No clients yet — click "+ Add client" above</div>'; return; }
+  const el = document.getElementById('hub-content-'+hub);
+  if (!tabsEl || !el) return;
+  const clients = getHubClients(hub);
+  let active = tabsEl.dataset.active;
+  if (!clients.includes(active)) active = clients[0] || '';
+  tabsEl.dataset.active = active;
+  // rebuild tabs
+  tabsEl.innerHTML = clients.map(c =>
+    '<button class="hub-tab'+(c===active?' active':'')+'" onclick="switchClient(\''+hub+'\',this)">'+hubEsc(c)+'</button>'
+  ).join('') + '<button class="hub-tab" style="margin-left:auto;font-size:11px" onclick="openAddClient(\''+hub+'\')">+ Add client</button>';
+  if (!active) { el.innerHTML = '<div class="empty">No clients — click "+ Add client"</div>'; return; }
   renderClientHub(hub, active);
 }
 
-function switchClient(hub, client, btn) {
+function switchClient(hub, btn) {
+  const client = btn.textContent.trim();
   const tabsEl = document.getElementById('htabs-'+hub);
   if (tabsEl) {
     tabsEl.dataset.active = client;
@@ -912,6 +1188,7 @@ function openAddClient(hub) {
   document.getElementById('add-client-hub').value = hub;
   document.getElementById('add-client-name').value = '';
   document.getElementById('add-client-modal').classList.add('open');
+  setTimeout(() => document.getElementById('add-client-name').focus(), 50);
 }
 
 function saveNewClient() {
@@ -922,23 +1199,22 @@ function saveNewClient() {
   if (!state.clientHubs[key]) state.clientHubs[key] = [...(HUB_DEFAULTS[hub]||[])];
   if (state.clientHubs[key].includes(name)) { toast('Client already exists'); return; }
   state.clientHubs[key].push(name);
+  document.getElementById('htabs-'+hub).dataset.active = name;
   saveState();
   document.getElementById('add-client-modal').classList.remove('open');
-  // switch to new client
-  const tabsEl = document.getElementById('htabs-'+hub);
-  if (tabsEl) tabsEl.dataset.active = name;
   renderHub(hub);
-  toast('Client added: '+name);
+  toast('Added: '+name);
 }
 
 function removeClient(hub, client) {
-  if (!confirm('Remove '+client+' from this hub? Their data will be kept.')) return;
+  if (!confirm('Remove '+client+' from this hub?')) return;
   const key = '_list_'+hub;
   if (!state.clientHubs[key]) state.clientHubs[key] = [...(HUB_DEFAULTS[hub]||[])];
   state.clientHubs[key] = state.clientHubs[key].filter(c => c !== client);
+  const tabsEl = document.getElementById('htabs-'+hub);
+  if (tabsEl) tabsEl.dataset.active = (state.clientHubs[key][0]||'');
   saveState();
   renderHub(hub);
-  toast('Client removed');
 }
 
 function renderClientHub(hub, client) {
@@ -947,156 +1223,165 @@ function renderClientHub(hub, client) {
   const d = getClientData(hub, client);
   const issues = allIssues().filter(i => (i.client||'').toLowerCase() === client.toLowerCase());
   const openIssues = issues.filter(i => !['resolved','done','compliant'].includes((i.status||'').toLowerCase()));
-
-  function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-  const healthMap = [{k:'green',label:'Healthy',cls:'health-green'},{k:'amber',label:'Needs Attention',cls:'health-amber'},{k:'red',label:'At Risk',cls:'health-red'}];
+  const hm = [{k:'green',label:'Healthy',cls:'health-green'},{k:'amber',label:'Needs Attention',cls:'health-amber'},{k:'red',label:'At Risk',cls:'health-red'}];
 
   const notesHtml = d.notes.length
     ? d.notes.slice().reverse().map((n,ri) => {
         const i = d.notes.length-1-ri;
         return '<div class="note-entry">'
-          +'<div class="note-date">'+n.date+(n.time?' &nbsp;'+n.time:'')+'</div>'
-          +'<div class="note-body">'+esc(n.text).replace(/\n/g,'<br>')+'</div>'
-          +'<button class="abtn" style="margin-top:6px;font-size:11px" onclick="deleteHubNote(\''+hub+'\',\''+esc(client)+'\','+i+')">Delete</button>'
+          +'<div class="note-date">'+hubEsc(n.date)+(n.time?' &nbsp;'+hubEsc(n.time):'')+'</div>'
+          +'<div class="note-body">'+hubEsc(n.text).replace(/\n/g,'<br>')+'</div>'
+          +'<button class="abtn" style="margin-top:6px" onclick="deleteHubNote(\''+hub+'\',\''+hub+'::'+hubEsc(client)+'\','+i+')">Delete</button>'
           +'</div>';
       }).join('')
-    : '<div class="empty" style="padding:8px 0;font-size:13px">No call notes yet</div>';
+    : '<div class="empty" style="padding:8px 0">No call notes yet</div>';
 
   const actionsHtml = d.actions.length
     ? d.actions.map((a,i) =>
         '<div class="ap-item'+(a.done?' done':'')+'"><input type="checkbox" class="ap-check"'+(a.done?' checked':'')
-        +' onchange="toggleHubAction(\''+hub+'\',\''+esc(client)+'\','+i+')">'
-        +'<div style="flex:1"><div class="ap-text">'+esc(a.text)+'</div>'
-        +'<div class="ap-meta">'+(a.due?'Due: '+a.due:'')+(a.owner?' · Owner: '+esc(a.owner):'')+'</div></div>'
-        +'<span class="ap-del" onclick="deleteHubAction(\''+hub+'\',\''+esc(client)+'\','+i+')">✕</span></div>'
+        +' onchange="toggleHubAction(\''+hub+'\',\''+hub+'::'+hubEsc(client)+'\','+i+')">'
+        +'<div style="flex:1"><div class="ap-text">'+hubEsc(a.text)+'</div>'
+        +'<div class="ap-meta">'+(a.due?'Due: '+hubEsc(a.due):'')+(a.owner?' · '+hubEsc(a.owner):'')+'</div></div>'
+        +'<span class="ap-del" onclick="deleteHubAction(\''+hub+'\',\''+hub+'::'+hubEsc(client)+'\','+i+')">✕</span></div>'
       ).join('')
-    : '<div class="empty" style="padding:8px 0;font-size:13px">No action points yet</div>';
+    : '<div class="empty" style="padding:8px 0">No action points yet</div>';
 
   const contactsHtml = d.contacts.length
     ? d.contacts.map((c,i) =>
         '<div class="contact-row"><div>'
-        +'<strong>'+esc(c.name)+'</strong> <span style="color:var(--text3);font-size:11px">'+esc(c.role)+'</span><br>'
-        +'<span style="font-size:11px;color:var(--text2)">'+esc(c.email)+(c.phone?' &nbsp;·&nbsp; '+esc(c.phone):'')+'</span>'
-        +'</div><button class="btn-ghost" style="font-size:11px;padding:3px 8px" onclick="deleteHubContact(\''+hub+'\',\''+esc(client)+'\','+i+')">Remove</button></div>'
+        +'<strong>'+hubEsc(c.name)+'</strong>'+(c.role?' <span style="color:var(--text3);font-size:11px">'+hubEsc(c.role)+'</span>':'')+'<br>'
+        +'<span style="font-size:11px;color:var(--text2)">'+hubEsc(c.email||'')+(c.phone?' · '+hubEsc(c.phone):'')+'</span>'
+        +'</div><button class="btn-ghost" style="font-size:11px;padding:3px 8px" onclick="deleteHubContact(\''+hub+'\',\''+hub+'::'+hubEsc(client)+'\','+i+')">Remove</button></div>'
       ).join('')
-    : '<div style="font-size:12px;color:var(--text3);padding:4px 0">No contacts yet</div>';
+    : '<div style="font-size:12px;color:var(--text3);padding:4px 0">No contacts added yet</div>';
 
   const linkedHtml = openIssues.length
     ? '<div class="linked-issues">'+openIssues.slice(0,8).map(i =>
-        '<div class="li-row"><span style="font-family:monospace;font-size:11px;color:var(--text3)">'+i.id+'</span>'
-        +sb(i.status)+'<span style="flex:1;font-size:12px">'+esc(i.summary.substring(0,55))+'</span>'+pb(i.priority)+'</div>'
+        '<div class="li-row"><span style="font-family:monospace;font-size:11px;color:var(--text3)">'+hubEsc(i.id)+'</span>'
+        +sb(i.status)+'<span style="flex:1;font-size:12px;padding:0 6px">'+hubEsc(i.summary.substring(0,55))+'</span>'+pb(i.priority)+'</div>'
       ).join('')+'</div>'
-    : '<div class="empty" style="padding:6px 0;font-size:12px">No open issues matched for this client name</div>';
-
-  const healthBtns = healthMap.map(h =>
-    '<span class="health-pill '+h.cls+(d.health===h.k?' health-active':'')+'"'
-    +' onclick="setHubHealth(\''+hub+'\',\''+esc(client)+'\',\''+h.k+'\')">'+h.label+'</span>'
-  ).join('');
+    : '<div class="empty" style="padding:6px 0;font-size:12px">No open issues matched by client name</div>';
 
   el.innerHTML =
     '<div class="client-card">'
-    +'<div class="client-header">'
-    +'<div><div class="client-name">'+esc(client)+'</div>'
-    +(d.tier?'<div class="client-meta">'+esc(d.tier)+'</div>':'')
-    +'</div>'
-    +'<div style="text-align:right">'
+    +'<div class="client-header"><div>'
+    +'<div class="client-name">'+hubEsc(client)+'</div>'
+    +(d.tier?'<div class="client-meta">'+hubEsc(d.tier)+'</div>':'')
+    +'</div><div>'
     +'<div class="hub-section-title" style="margin-bottom:4px;justify-content:flex-end">Account health</div>'
-    +'<div class="health-bar">'+healthBtns+'</div>'
+    +'<div class="health-bar">'+hm.map(h=>'<span class="health-pill '+h.cls+(d.health===h.k?' health-active':'')+'" onclick="setHubHealth(\''+hub+'\',\''+hub+'::'+hubEsc(client)+'\',\''+h.k+'\')">'+h.label+'</span>').join('')+'</div>'
     +'</div></div>'
 
-    +'<div style="margin-bottom:16px">'
-    +'<div class="hub-section-title">Tier / Plan</div>'
-    +'<input class="hub-input" placeholder="e.g. Enterprise, Premium…" value="'+esc(d.tier||'')+'"'
-    +' onchange="setHubField(\''+hub+'\',\''+esc(client)+'\',\'tier\',this.value)">'
+    +'<div style="margin-bottom:16px"><div class="hub-section-title">Tier / Plan</div>'
+    +'<input class="hub-input" placeholder="e.g. Enterprise, Premium…" value="'+hubEsc(d.tier||'')+'" onchange="setHubField(\''+hub+'::'+hubEsc(client)+'\',\'tier\',this.value)">'
     +'</div>'
 
-    +'<div class="hub-section">'
-    +'<div class="hub-section-title">Call notes <span>— newest first</span></div>'
-    +'<textarea class="hub-textarea" id="note-in-'+hub+'" placeholder="Log a call note, decisions made, issues raised…" rows="3"></textarea>'
-    +'<button class="btn-primary" style="font-size:12px;margin-top:6px;margin-bottom:12px" onclick="addHubNote(\''+hub+'\',\''+esc(client)+'\')">Add note</button>'
-    +'<div id="notes-out-'+hub+'">'+notesHtml+'</div>'
-    +'</div>'
+    +'<div class="hub-section"><div class="hub-section-title">Call notes <span>— newest first</span></div>'
+    +'<textarea class="hub-textarea" id="note-in-'+hub+'" placeholder="Log a call note, decisions, issues raised…" rows="3"></textarea>'
+    +'<button class="btn-primary" style="font-size:12px;margin:6px 0 12px" onclick="addHubNote(\''+hub+'\',\''+hub+'::'+hubEsc(client)+'\')">Add note</button>'
+    +'<div>'+notesHtml+'</div></div>'
 
-    +'<div class="hub-section">'
-    +'<div class="hub-section-title">Action points</div>'
+    +'<div class="hub-section"><div class="hub-section-title">Action points</div>'
     +'<div class="hub-row">'
     +'<input class="hub-input" id="ap-txt-'+hub+'" placeholder="Action item…">'
     +'<input class="hub-input" type="date" id="ap-due-'+hub+'" style="width:130px;flex:none">'
     +'<input class="hub-input" id="ap-own-'+hub+'" placeholder="Owner" style="width:110px;flex:none">'
-    +'<button class="btn-primary" style="white-space:nowrap;flex:none;font-size:12px" onclick="addHubAction(\''+hub+'\',\''+esc(client)+'\')">Add</button>'
-    +'</div>'
-    +'<div id="actions-out-'+hub+'">'+actionsHtml+'</div>'
-    +'</div>'
+    +'<button class="btn-primary" style="white-space:nowrap;flex:none;font-size:12px" onclick="addHubAction(\''+hub+'\',\''+hub+'::'+hubEsc(client)+'\')">Add</button>'
+    +'</div><div>'+actionsHtml+'</div></div>'
 
-    +'<div class="hub-section">'
-    +'<div class="hub-section-title">Key contacts</div>'
-    +'<div class="hub-row" style="flex-wrap:wrap">'
-    +'<input class="hub-input" id="ct-nm-'+hub+'" placeholder="Name" style="flex:1;min-width:100px">'
-    +'<input class="hub-input" id="ct-rl-'+hub+'" placeholder="Role" style="flex:1;min-width:100px">'
-    +'<input class="hub-input" id="ct-em-'+hub+'" placeholder="Email" style="flex:1;min-width:130px">'
-    +'<input class="hub-input" id="ct-ph-'+hub+'" placeholder="Phone" style="flex:0 0 110px">'
-    +'<button class="btn-primary" style="white-space:nowrap;flex:none;font-size:12px" onclick="addHubContact(\''+hub+'\',\''+esc(client)+'\')">Add</button>'
-    +'</div>'
-    +'<div id="contacts-out-'+hub+'">'+contactsHtml+'</div>'
-    +'</div>'
+    +'<div class="hub-section"><div class="hub-section-title">Key contacts</div>'
+    +'<div class="hub-row">'
+    +'<input class="hub-input" id="ct-nm-'+hub+'" placeholder="Name">'
+    +'<input class="hub-input" id="ct-rl-'+hub+'" placeholder="Role">'
+    +'<input class="hub-input" id="ct-em-'+hub+'" placeholder="Email">'
+    +'<input class="hub-input" id="ct-ph-'+hub+'" placeholder="Phone" style="width:110px;flex:none">'
+    +'<button class="btn-primary" style="white-space:nowrap;flex:none;font-size:12px" onclick="addHubContact(\''+hub+'\',\''+hub+'::'+hubEsc(client)+'\')">Add</button>'
+    +'</div><div>'+contactsHtml+'</div></div>'
 
-    +'<div class="hub-section">'
-    +'<div class="hub-section-title">Open issues <span>matched from Jira import by client name</span></div>'
-    +linkedHtml
-    +'</div>'
+    +'<div class="hub-section"><div class="hub-section-title">Open issues <span>matched from Jira import by client name</span></div>'+linkedHtml+'</div>'
 
     +'<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">'
-    +'<button class="btn-ghost" style="font-size:11px;color:var(--danger);border-color:var(--danger)" onclick="removeClient(\''+hub+'\',\''+esc(client)+'\')">Remove this client</button>'
-    +'</div>'
-    +'</div>';
+    +'<button class="btn-ghost" style="font-size:11px;color:var(--danger);border-color:var(--danger)" onclick="removeClient(\''+hub+'\',\''+hubEsc(client)+'\')">Remove this client</button>'
+    +'</div></div>';
 }
 
-function setHubHealth(hub,client,h){const d=getClientData(hub,client);d.health=h;saveState();renderClientHub(hub,client);}
-function setHubField(hub,client,field,val){const d=getClientData(hub,client);d[field]=val;saveState();}
+function setHubHealth(hub,k,h){const d=state.clientHubs[k];if(d){d.health=h;saveState();const c=k.replace(hub+'::','');renderClientHub(hub,c);}}
+function setHubField(k,field,val){const d=state.clientHubs[k];if(d){d[field]=val;saveState();}}
 
-function addHubNote(hub,client){
+function addHubNote(hub,k){
   const ta=document.getElementById('note-in-'+hub);
-  const text=(ta?ta.value:'').trim();
-  if(!text)return;
-  const d=getClientData(hub,client);
+  const text=(ta?ta.value:'').trim();if(!text)return;
+  if(!state.clientHubs[k])state.clientHubs[k]={health:'green',notes:[],actions:[],contacts:[],tier:''};
   const now=new Date();
-  d.notes.push({text,date:now.toLocaleDateString(),time:now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});
-  ta.value='';
-  saveState();
-  renderClientHub(hub,client);
-  toast('Note added');
+  state.clientHubs[k].notes.push({text,date:now.toLocaleDateString(),time:now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});
+  if(ta)ta.value='';saveState();
+  const c=k.replace(hub+'::','');renderClientHub(hub,c);toast('Note added');
 }
-function deleteHubNote(hub,client,i){const d=getClientData(hub,client);d.notes.splice(i,1);saveState();renderClientHub(hub,client);}
+function deleteHubNote(hub,k,i){if(state.clientHubs[k])state.clientHubs[k].notes.splice(i,1);saveState();const c=k.replace(hub+'::','');renderClientHub(hub,c);}
 
-function addHubAction(hub,client){
-  const text=(document.getElementById('ap-txt-'+hub)||{value:''}).value.trim();
-  if(!text)return;
+function addHubAction(hub,k){
+  const text=(document.getElementById('ap-txt-'+hub)||{value:''}).value.trim();if(!text)return;
   const due=(document.getElementById('ap-due-'+hub)||{value:''}).value;
   const owner=(document.getElementById('ap-own-'+hub)||{value:''}).value.trim();
-  getClientData(hub,client).actions.push({text,due,owner,done:false,created:new Date().toLocaleDateString()});
+  if(!state.clientHubs[k])state.clientHubs[k]={health:'green',notes:[],actions:[],contacts:[],tier:''};
+  state.clientHubs[k].actions.push({text,due,owner,done:false});
   ['ap-txt-','ap-due-','ap-own-'].forEach(p=>{const el=document.getElementById(p+hub);if(el)el.value='';});
-  saveState();
-  renderClientHub(hub,client);
-  toast('Action added');
+  saveState();const c=k.replace(hub+'::','');renderClientHub(hub,c);toast('Action added');
 }
-function toggleHubAction(hub,client,i){const d=getClientData(hub,client);d.actions[i].done=!d.actions[i].done;saveState();renderClientHub(hub,client);}
-function deleteHubAction(hub,client,i){getClientData(hub,client).actions.splice(i,1);saveState();renderClientHub(hub,client);}
+function toggleHubAction(hub,k,i){if(state.clientHubs[k])state.clientHubs[k].actions[i].done=!state.clientHubs[k].actions[i].done;saveState();const c=k.replace(hub+'::','');renderClientHub(hub,c);}
+function deleteHubAction(hub,k,i){if(state.clientHubs[k])state.clientHubs[k].actions.splice(i,1);saveState();const c=k.replace(hub+'::','');renderClientHub(hub,c);}
 
-function addHubContact(hub,client){
-  const name=(document.getElementById('ct-nm-'+hub)||{value:''}).value.trim();
-  if(!name)return;
+function addHubContact(hub,k){
+  const name=(document.getElementById('ct-nm-'+hub)||{value:''}).value.trim();if(!name)return;
   const role=(document.getElementById('ct-rl-'+hub)||{value:''}).value.trim();
   const email=(document.getElementById('ct-em-'+hub)||{value:''}).value.trim();
   const phone=(document.getElementById('ct-ph-'+hub)||{value:''}).value.trim();
-  getClientData(hub,client).contacts.push({name,role,email,phone});
+  if(!state.clientHubs[k])state.clientHubs[k]={health:'green',notes:[],actions:[],contacts:[],tier:''};
+  state.clientHubs[k].contacts.push({name,role,email,phone});
   ['ct-nm-','ct-rl-','ct-em-','ct-ph-'].forEach(p=>{const el=document.getElementById(p+hub);if(el)el.value='';});
-  saveState();
-  renderClientHub(hub,client);
-  toast('Contact added');
+  saveState();const c=k.replace(hub+'::','');renderClientHub(hub,c);toast('Contact added');
 }
-function deleteHubContact(hub,client,i){getClientData(hub,client).contacts.splice(i,1);saveState();renderClientHub(hub,client);}
+function deleteHubContact(hub,k,i){if(state.clientHubs[k])state.clientHubs[k].contacts.splice(i,1);saveState();const c=k.replace(hub+'::','');renderClientHub(hub,c);}
 
+// ─── Advisory Export Report ───────────────────────────────────────────────────
+function exportAdvReport(){
+  const sections=[];
+  ['email','slack','nosend'].forEach(tagVal=>{
+    const label=tagVal==='email'?'Send via Email':tagVal==='slack'?'Send via Slack':"Don't Send";
+    const items=[];
+    ['uk','mtc'].forEach(tab=>{
+      const tpls=tab==='uk'?[...TEMPLATES.uk,...TEMPLATES.new]:TEMPLATES[tab];
+      const tl=tab==='mtc'?'MTC':'ADV';
+      tpls.forEach(t=>{if(getTag(tab,t.type).includes(tagVal))items.push({tl,type:t.type,subject:t.subject,body:t.body||''});});
+    });
+    if(items.length)sections.push({label,tagVal,items});
+  });
+  const date=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const colors={email:'#3b82f6',slack:'#22c55e',nosend:'#ef4444'};
+  const html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Advisory Report - '+date+'</title><style>'
+    +'body{font-family:Arial,sans-serif;background:#fff;color:#111;padding:40px;max-width:900px;margin:0 auto}'
+    +'h1{font-size:22px;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:6px}'
+    +'.meta{font-size:13px;color:#666;margin-bottom:30px}'
+    +'.sec-title{font-size:16px;font-weight:bold;padding:8px 14px;border-radius:4px;margin-bottom:14px;color:#fff}'
+    +'.item{border:1px solid #ddd;border-radius:6px;padding:14px 18px;margin-bottom:12px;page-break-inside:avoid}'
+    +'.item-hdr{display:flex;gap:10px;align-items:center;margin-bottom:6px}'
+    +'.item-tab{background:#eee;border-radius:3px;padding:2px 7px;font-size:11px;font-weight:bold}'
+    +'.item-type{font-size:15px;font-weight:600}'
+    +'.item-subj{font-size:12px;color:#555;font-style:italic;margin-bottom:8px}'
+    +'.item-body{font-size:13px;line-height:1.6;white-space:pre-wrap;background:#f8f8f8;padding:10px;border-radius:4px}'
+    +'</style></head><body>'
+    +'<h1>RAS Ops — Advisory Communication Report</h1>'
+    +'<div class="meta">Generated: '+date+' &nbsp;|&nbsp; '+sections.reduce((a,s)=>a+s.items.length,0)+' advisories tagged</div>'
+    +sections.map(sec=>'<div style="margin-bottom:36px"><div class="sec-title" style="background:'+colors[sec.tagVal]+'">'+sec.label+' ('+sec.items.length+')</div>'
+      +sec.items.map(it=>'<div class="item"><div class="item-hdr"><span class="item-tab">'+it.tl+'</span><span class="item-type">'+it.type+'</span></div>'
+        +'<div class="item-subj">'+it.subject+'</div>'
+        +'<div class="item-body">'+it.body.replace(/</g,'&lt;')+'</div></div>').join('')
+      +'</div>').join('')
+    +'</body></html>';
+  const w=window.open('','_blank');
+  if(w){w.document.write(html);w.document.close();setTimeout(()=>w.print(),400);}
+  toast('Report opened — use browser print/Save as PDF');
+}
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 renderDashboard();
