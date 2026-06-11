@@ -82,6 +82,7 @@ tr:hover td{background:var(--bg3)}
 .tcard.tagged-email{border-left:3px solid var(--accent)}
 .tcard.tagged-slack{border-left:3px solid var(--success)}
 .tcard.tagged-nosend{border-left:3px solid var(--danger)}
+.tcard.tagged-email.tagged-slack{border-left:3px solid var(--accent);box-shadow:inset 3px 0 0 var(--success)}
 .tcard-hdr{display:flex;align-items:center;gap:6px;padding:10px 14px;cursor:pointer;user-select:none;flex-wrap:wrap}
 .tcard-hdr:hover{background:var(--bg3)}
 .tcard-type{font-size:12.5px;font-weight:600;color:var(--text)}
@@ -424,6 +425,7 @@ pre{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rad
           <button class="abtn" onclick="copyStats()">Copy to clipboard</button>
           <button class="abtn" onclick="exportIssues()" style="margin-left:4px">Export issues CSV</button>
           <button class="abtn" onclick="exportTagged()" style="margin-left:4px">Export tagged advisories CSV</button>
+          <button class="abtn" onclick="exportAdvReport()" style="margin-left:4px">Advisory report PDF</button>
         </div>
         <pre id="stats-prev"></pre>
       </div>
@@ -448,6 +450,19 @@ pre{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rad
   </div>
 </div>
 
+
+<!-- Add client modal -->
+<div class="modal-overlay" id="add-client-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <h3>Add client to hub</h3>
+    <input type="hidden" id="add-client-hub">
+    <div class="modal-row"><label>Client name *</label><input id="add-client-name" placeholder="e.g. BetStar"></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="document.getElementById('add-client-modal').classList.remove('open')">Cancel</button>
+      <button class="btn-primary" onclick="saveNewClient()">Add client</button>
+    </div>
+  </div>
+</div>
 <!-- New advisory modal -->
 <div class="modal-overlay" id="new-adv-modal" onclick="if(event.target===this)closeNewAdv()">
   <div class="modal">
@@ -549,21 +564,24 @@ function allIssues(){return[...state.issues,...state.muManual.map(t=>({...t,clie
 function tagKey(tab,type){return`${tab}::${type}`;}
 
 function setTag(tab,type,tag){
-  state.tags[tagKey(tab,type)]=tag;
+  const k=tagKey(tab,type);
+  if(!state.tags[k])state.tags[k]=[];
+  if(tag===null){state.tags[k]=[];}
+  else{const idx=state.tags[k].indexOf(tag);if(idx>=0)state.tags[k].splice(idx,1);else state.tags[k].push(tag);}
   saveState();
   updateCounts();
   renderAdvTab();
 }
-function getTag(tab,type){return state.tags[tagKey(tab,type)]||null;}
+function getTag(tab,type){return state.tags[tagKey(tab,type)]||[];}
 
 function updateCounts(){
   const all=allIssues();
   const open=all.filter(i=>!['resolved','done','compliant'].includes((i.status||'').toLowerCase()));
   document.getElementById('ib').textContent=open.length;
-  const tv=Object.values(state.tags).filter(Boolean);
-  const em=tv.filter(t=>t==='email').length+state.customAdvs.filter(a=>a.tag==='email').length;
-  const sl=tv.filter(t=>t==='slack').length+state.customAdvs.filter(a=>a.tag==='slack').length;
-  const ns=tv.filter(t=>t==='nosend').length+state.customAdvs.filter(a=>a.tag==='nosend').length;
+  const tv=Object.values(state.tags).flat();
+  const em=tv.filter(t=>t==='email').length+state.customAdvs.filter(a=>(a.tags||[]).includes('email')||(a.tag==='email')).length;
+  const sl=tv.filter(t=>t==='slack').length+state.customAdvs.filter(a=>(a.tags||[]).includes('slack')||(a.tag==='slack')).length;
+  const ns=tv.filter(t=>t==='nosend').length+state.customAdvs.filter(a=>(a.tags||[]).includes('nosend')||(a.tag==='nosend')).length;
   const tot=em+sl+ns;
   ['ab','a-tot'].forEach(id=>document.getElementById(id).textContent=tot);
   document.getElementById('nb-em').textContent=em;
@@ -591,7 +609,7 @@ function renderDashboard(){
   const a={};all.forEach(i=>{const k=i.assignee||'Unassigned';a[k]=(a[k]||0)+1;});
   document.getElementById('dash-asgn').innerHTML=bars(Object.entries(a).sort((a,b)=>b[1]-a[1]));
   document.getElementById('dash-themes').innerHTML=getThemes(all).slice(0,5).map(([t,c])=>`<span class="badge bi" style="font-size:12px;padding:4px 11px">${t} <strong style="margin-left:4px">${c}</strong></span>`).join('');
-  const tv=Object.values(state.tags).filter(Boolean);
+  const tv=Object.values(state.tags).flat();
   const tot=tv.length;
   const advEl=document.getElementById('dash-adv');
   if(tot){const em=tv.filter(t=>t==='email').length;const sl=tv.filter(t=>t==='slack').length;const ns=tv.filter(t=>t==='nosend').length;advEl.innerHTML=[['Email',em,'bi'],['Slack',sl,'bsu'],["Don't send",ns,'bd']].filter(r=>r[1]>0).map(([ch,c,b])=>`<div class="stat-row"><span class="badge ${b}" style="min-width:76px;justify-content:center">${ch}</span><div class="bar-bg" style="margin:0 10px"><div class="bar-fill" style="width:${Math.round(c/tot*100)}%"></div></div><span style="font-weight:600">${c}</span></div>`).join('');}
@@ -727,11 +745,11 @@ function renderAdvTab(){
   const templates=TEMPLATES[tab]||[];
   const f=templates.filter(t=>{
     if(s&&!(t.type+t.subject+(t.body||'')).toLowerCase().includes(s))return false;
-    const tag=getTag(tab,t.type);
-    if(ft==='untagged'&&tag)return false;
-    if(ft==='email'&&tag!=='email')return false;
-    if(ft==='slack'&&tag!=='slack')return false;
-    if(ft==='nosend'&&tag!=='nosend')return false;
+    const tags=getTag(tab,t.type);
+    if(ft==='untagged'&&tags.length)return false;
+    if(ft==='email'&&!tags.includes('email'))return false;
+    if(ft==='slack'&&!tags.includes('slack'))return false;
+    if(ft==='nosend'&&!tags.includes('nosend'))return false;
     return true;
   });
   el.innerHTML=f.length?f.map(t=>templateCard(t,tab)).join(''):'<div class="empty">No templates match</div>';
@@ -743,13 +761,16 @@ function renderAdvTab(){
 function templateCard(t,tab){
   const id=`tc-${tab}-${(t.type||'').replace(/\W/g,'_')}`;
   const isOpen=state.openTpl===id;
-  const tag=getTag(tab,t.type);
-  const tagClass=tag==='email'?'tagged-email':tag==='slack'?'tagged-slack':tag==='nosend'?'tagged-nosend':'';
-  const tagBadge=tag==='email'?`<span class="badge bi" style="margin-left:6px">Email</span>`:tag==='slack'?`<span class="badge bsu" style="margin-left:6px">Slack</span>`:tag==='nosend'?`<span class="badge bd" style="margin-left:6px">Don't send</span>`:'';
+  const tags=getTag(tab,t.type);
+  const hasEmail=tags.includes('email');
+  const hasSlack=tags.includes('slack');
+  const hasNosend=tags.includes('nosend');
+  const tagClasses=(hasEmail?'tagged-email ':'')+(hasSlack?'tagged-slack ':'')+(hasNosend?'tagged-nosend ':'');
+  const tagBadges=(hasEmail?'<span class="badge bi" style="margin-left:4px">Email</span>':'')+(hasSlack?'<span class="badge bsu" style="margin-left:4px">Slack</span>':'')+(hasNosend?'<span class="badge bd" style="margin-left:4px">Don\'t send</span>':'');
   const whoBadge=t.who?`<span class="badge bnn" style="font-size:10px;margin-left:4px">${t.who}</span>`:'';
   const typeLabel=tab==='mtc'?'MTC':tab==='new'?'NEW':'UK';
-  const te=t.type.replace(/'/g,"\\'").replace(/\\/g,'\\\\');
-  return`<div class="tcard ${tagClass}" id="${id}"><div class="tcard-hdr" onclick="toggleTpl('${id}','${tab}')"><span class="badge bnn" style="font-size:10px;flex-shrink:0">${typeLabel}</span><span class="tcard-type" style="margin-left:8px">${t.type}</span>${whoBadge}${tagBadge}<span class="tcard-subj">${t.subject}</span><span style="margin-left:6px;flex-shrink:0;font-size:12px;color:var(--text3)">${isOpen?'&#9650;':'&#9660;'}</span></div><div class="tcard-body${isOpen?' open':''}" id="body-${id}"><div class="tfield"><label>Subject line</label><div class="tv">${t.subject}</div></div><div class="tfield"><label>Message body</label><div class="tv">${(t.body||'').replace(/\n/g,'<br>')}</div></div>${t.example?`<div class="tfield"><label>Mauritius example</label><div class="tv" style="color:var(--text2)">${t.example}</div></div>`:''}<div class="triage-bar"><span class="triage-label">Send via:</span><button class="tbtn-email${tag==='email'?' active-tag':''}" onclick="setTag('${tab}','${te}','email');event.stopPropagation()">&#9993; Email</button><button class="tbtn-slack${tag==='slack'?' active-tag':''}" onclick="setTag('${tab}','${te}','slack');event.stopPropagation()">&#9737; Slack</button><button class="tbtn-nosend${tag==='nosend'?' active-tag':''}" onclick="setTag('${tab}','${te}','nosend');event.stopPropagation()">&#10005; Don't send</button>${tag?`<button class="clear-btn" onclick="setTag('${tab}','${te}',null);event.stopPropagation()">Clear</button>`:''}</div></div></div>`;
+  const te=t.type.replace(/'/g,"\\'");
+  return`<div class="tcard ${tagClasses.trim()}" id="${id}"><div class="tcard-hdr" onclick="toggleTpl('${id}','${tab}')"><span class="badge bnn" style="font-size:10px;flex-shrink:0">${typeLabel}</span><span class="tcard-type" style="margin-left:8px">${t.type}</span>${whoBadge}${tagBadges}<span class="tcard-subj">${t.subject}</span><span style="margin-left:6px;flex-shrink:0;font-size:12px;color:var(--text3)">${isOpen?'&#9650;':'&#9660;'}</span></div><div class="tcard-body${isOpen?' open':''}" id="body-${id}"><div class="tfield"><label>Subject line</label><div class="tv">${t.subject}</div></div><div class="tfield"><label>Message body</label><div class="tv">${(t.body||'').replace(/\n/g,'<br>')}</div></div>${t.example?`<div class="tfield"><label>Mauritius example</label><div class="tv" style="color:var(--text2)">${t.example}</div></div>`:''}<div class="triage-bar"><span class="triage-label">Send via:</span><button class="tbtn-email${hasEmail?' active-tag':''}" onclick="setTag('${tab}','${te}','email');event.stopPropagation()">&#9993; Email</button><button class="tbtn-slack${hasSlack?' active-tag':''}" onclick="setTag('${tab}','${te}','slack');event.stopPropagation()">&#9737; Slack</button><button class="tbtn-nosend${hasNosend?' active-tag':''}" onclick="setTag('${tab}','${te}','nosend');event.stopPropagation()">&#10005; Don't send</button>${tags.length?`<button class="clear-btn" onclick="setTag('${tab}','${te}',null);event.stopPropagation()">Clear all</button>`:''}</div></div></div>`;
 }
 
 function toggleTpl(id,tab){state.openTpl=state.openTpl===id?null:id;renderAdvTab();}
@@ -766,11 +787,11 @@ function delCustom(id){state.customAdvs=state.customAdvs.filter(x=>x.id!==id);sa
 function renderTaggedPage(tagVal,elId){
   const el=document.getElementById(elId);if(!el)return;
   const results=[];
-  ['uk','new','mtc'].forEach(tab=>{TEMPLATES[tab].forEach(t=>{if(getTag(tab,t.type)===tagVal)results.push({...t,tab,isTemplate:true});});});
+  ['uk','new','mtc'].forEach(tab=>{TEMPLATES[tab].forEach(t=>{if(getTag(tab,t.type).includes(tagVal))results.push({...t,tab,isTemplate:true});});});
   state.customAdvs.filter(a=>a.tag===tagVal).forEach(a=>results.push({...a,isTemplate:false}));
   if(!results.length){el.innerHTML='<div class="empty">Nothing tagged for this channel yet - go to All Advisories to triage your templates</div>';return;}
   el.innerHTML=results.map(r=>{
-    if(r.isTemplate){const tl=r.tab==='mtc'?'MTC':r.tab==='new'?'NEW':'UK';const te=r.type.replace(/'/g,"\\'");return`<div class="card" style="margin-bottom:10px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span class="badge bnn" style="font-size:10px">${tl}</span><span style="font-size:13px;font-weight:600">${r.type}</span></div><div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500">${r.subject}</div><div style="font-size:12px;line-height:1.55;white-space:pre-wrap;background:var(--bg3);padding:10px;border-radius:var(--radius);border:1px solid var(--border)">${r.body||''}</div><div style="margin-top:10px"><button class="abtn" onclick="setTag('${r.tab}','${te}',null);renderTaggedPage('${tagVal}','${elId}')">Remove tag</button></div></div>`;}
+    if(r.isTemplate){const tl=r.tab==='mtc'?'MTC':r.tab==='new'?'NEW':'UK';const te=r.type.replace(/'/g,"\\'");return`<div class="card" style="margin-bottom:10px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span class="badge bnn" style="font-size:10px">${tl}</span><span style="font-size:13px;font-weight:600">${r.type}</span></div><div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500">${r.subject}</div><div style="font-size:12px;line-height:1.55;white-space:pre-wrap;background:var(--bg3);padding:10px;border-radius:var(--radius);border:1px solid var(--border)">${r.body||''}</div><div style="margin-top:10px"><button class="abtn" onclick="setTag('${r.tab}','${te}','${tagVal}');renderTaggedPage('${tagVal}','${elId}')">Remove from this channel</button></div></div>`;}
     else{return`<div class="acard"><div class="acard-body"><div class="acard-title">${r.title}</div><div class="acard-meta">${r.category} - ${r.clients||'All'} - ${r.date}</div>${r.notes?`<div style="font-size:11px;color:var(--text3);margin-top:4px">${r.notes.substring(0,100)}...</div>`:''}</div></div>`;}
   }).join('');
 }
@@ -841,225 +862,241 @@ function resetToSample(){
 
 
 // ─── Client Hubs ─────────────────────────────────────────────────────────────
-const HUB_CLIENTS = {
+
+const HUB_DEFAULTS = {
   mts: ['Stakemate','Laserbet'],
   betbridge: ['UPC','Fairplay','Phoenix','Expat'],
   saas: ['Altenar','Playbook','Swifty Gaming','Pragmatic Play']
 };
 
-function hubKey(hub, client) { return hub + '::' + client; }
+function getHubClients(hub){
+  return state.clientHubs['_list_'+hub] || HUB_DEFAULTS[hub] || [];
+}
 
-function getHub(hub, client) {
-  const k = hubKey(hub, client);
-  if (!state.clientHubs[k]) state.clientHubs[k] = {
-    health: 'green',
-    notes: [],
-    actions: [],
-    contacts: [],
-    tier: '',
-    linkedIssues: []
-  };
+function getClientData(hub, client) {
+  const k = hub+'::'+client;
+  if (!state.clientHubs[k]) state.clientHubs[k] = {health:'green',notes:[],actions:[],contacts:[],tier:''};
   return state.clientHubs[k];
 }
 
 function renderHub(hub) {
-  const clients = HUB_CLIENTS[hub];
-  // find active tab
-  const tabEl = document.querySelector(`#htabs-${hub} .hub-tab.active`);
-  const active = tabEl ? tabEl.textContent.trim() : clients[0];
+  const el = document.getElementById('hub-content-'+hub);
+  if (!el) return;
+  const clients = getHubClients(hub);
+  const tabsEl = document.getElementById('htabs-'+hub);
+  let active = (tabsEl && tabsEl.dataset.active) ? tabsEl.dataset.active : (clients[0]||'');
+  // ensure active is still valid
+  if (!clients.includes(active)) active = clients[0]||'';
+  if (tabsEl) {
+    tabsEl.dataset.active = active;
+    tabsEl.innerHTML = clients.map(c =>
+      `<button class="hub-tab${c===active?' active':''}" onclick="switchClient('${hub}','${c.replace(/'/g,"\\'")}',this)">${c}</button>`
+    ).join('') +
+    `<button class="hub-tab" style="margin-left:auto;font-size:11px" onclick="openAddClient('${hub}')">+ Add client</button>`;
+  }
+  if (!active) { el.innerHTML = '<div class="empty">No clients yet — click "+ Add client" above</div>'; return; }
   renderClientHub(hub, active);
 }
 
-function switchClient(hub, client, el) {
-  document.querySelectorAll(`#htabs-${hub} .hub-tab`).forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
+function switchClient(hub, client, btn) {
+  const tabsEl = document.getElementById('htabs-'+hub);
+  if (tabsEl) {
+    tabsEl.dataset.active = client;
+    tabsEl.querySelectorAll('.hub-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+  }
   renderClientHub(hub, client);
+}
+
+function openAddClient(hub) {
+  document.getElementById('add-client-hub').value = hub;
+  document.getElementById('add-client-name').value = '';
+  document.getElementById('add-client-modal').classList.add('open');
+}
+
+function saveNewClient() {
+  const hub = document.getElementById('add-client-hub').value;
+  const name = document.getElementById('add-client-name').value.trim();
+  if (!name) return;
+  const key = '_list_'+hub;
+  if (!state.clientHubs[key]) state.clientHubs[key] = [...(HUB_DEFAULTS[hub]||[])];
+  if (state.clientHubs[key].includes(name)) { toast('Client already exists'); return; }
+  state.clientHubs[key].push(name);
+  saveState();
+  document.getElementById('add-client-modal').classList.remove('open');
+  // switch to new client
+  const tabsEl = document.getElementById('htabs-'+hub);
+  if (tabsEl) tabsEl.dataset.active = name;
+  renderHub(hub);
+  toast('Client added: '+name);
+}
+
+function removeClient(hub, client) {
+  if (!confirm('Remove '+client+' from this hub? Their data will be kept.')) return;
+  const key = '_list_'+hub;
+  if (!state.clientHubs[key]) state.clientHubs[key] = [...(HUB_DEFAULTS[hub]||[])];
+  state.clientHubs[key] = state.clientHubs[key].filter(c => c !== client);
+  saveState();
+  renderHub(hub);
+  toast('Client removed');
 }
 
 function renderClientHub(hub, client) {
-  const d = getHub(hub, client);
+  const el = document.getElementById('hub-content-'+hub);
+  if (!el) return;
+  const d = getClientData(hub, client);
   const issues = allIssues().filter(i => (i.client||'').toLowerCase() === client.toLowerCase());
   const openIssues = issues.filter(i => !['resolved','done','compliant'].includes((i.status||'').toLowerCase()));
 
-  const healthColors = {green:'health-green',amber:'health-amber',red:'health-red'};
-  const healthLabels = {green:'Healthy',amber:'Needs Attention',red:'At Risk'};
+  function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  const healthMap = [{k:'green',label:'Healthy',cls:'health-green'},{k:'amber',label:'Needs Attention',cls:'health-amber'},{k:'red',label:'At Risk',cls:'health-red'}];
 
   const notesHtml = d.notes.length
     ? d.notes.slice().reverse().map((n,ri) => {
-        const i = d.notes.length - 1 - ri;
-        return `<div class="note-entry"><div class="note-date">${n.date} ${n.time||''}</div><div class="note-body">${escHtml(n.text)}</div><div style="margin-top:6px;display:flex;gap:6px"><button class="btn-ghost" style="font-size:11px;padding:3px 8px" onclick="deleteNote('${hub}','${client}',${i})">Delete</button></div></div>`;
+        const i = d.notes.length-1-ri;
+        return '<div class="note-entry">'
+          +'<div class="note-date">'+n.date+(n.time?' &nbsp;'+n.time:'')+'</div>'
+          +'<div class="note-body">'+esc(n.text).replace(/\n/g,'<br>')+'</div>'
+          +'<button class="abtn" style="margin-top:6px;font-size:11px" onclick="deleteHubNote(\''+hub+'\',\''+esc(client)+'\','+i+')">Delete</button>'
+          +'</div>';
       }).join('')
-    : '<div class="empty" style="padding:8px 0">No call notes yet</div>';
+    : '<div class="empty" style="padding:8px 0;font-size:13px">No call notes yet</div>';
 
   const actionsHtml = d.actions.length
-    ? d.actions.map((a,i) => `<div class="ap-item${a.done?' done':''}"><input type="checkbox" class="ap-check" ${a.done?'checked':''} onchange="toggleAction('${hub}','${client}',${i})"><div style="flex:1"><div class="ap-text">${escHtml(a.text)}</div><div class="ap-meta">${a.due?'Due: '+a.due:''} ${a.owner?'· Owner: '+a.owner:''}</div></div><span class="ap-del" onclick="deleteAction('${hub}','${client}',${i})">✕</span></div>`).join('')
-    : '<div class="empty" style="padding:8px 0">No action points yet</div>';
+    ? d.actions.map((a,i) =>
+        '<div class="ap-item'+(a.done?' done':'')+'"><input type="checkbox" class="ap-check"'+(a.done?' checked':'')
+        +' onchange="toggleHubAction(\''+hub+'\',\''+esc(client)+'\','+i+')">'
+        +'<div style="flex:1"><div class="ap-text">'+esc(a.text)+'</div>'
+        +'<div class="ap-meta">'+(a.due?'Due: '+a.due:'')+(a.owner?' · Owner: '+esc(a.owner):'')+'</div></div>'
+        +'<span class="ap-del" onclick="deleteHubAction(\''+hub+'\',\''+esc(client)+'\','+i+')">✕</span></div>'
+      ).join('')
+    : '<div class="empty" style="padding:8px 0;font-size:13px">No action points yet</div>';
 
   const contactsHtml = d.contacts.length
-    ? d.contacts.map((c,i) => `<div class="contact-row"><div><strong>${escHtml(c.name)}</strong> <span style="color:var(--text3);font-size:11px">${escHtml(c.role)}</span><br><span style="font-size:11px;color:var(--text2)">${escHtml(c.email)} ${c.phone?'· '+c.phone:''}</span></div><button class="btn-ghost" style="font-size:11px;padding:3px 8px" onclick="deleteContact('${hub}','${client}',${i})">Remove</button></div>`).join('')
-    : '<div style="font-size:12px;color:var(--text3);padding:4px 0">No contacts added</div>';
+    ? d.contacts.map((c,i) =>
+        '<div class="contact-row"><div>'
+        +'<strong>'+esc(c.name)+'</strong> <span style="color:var(--text3);font-size:11px">'+esc(c.role)+'</span><br>'
+        +'<span style="font-size:11px;color:var(--text2)">'+esc(c.email)+(c.phone?' &nbsp;·&nbsp; '+esc(c.phone):'')+'</span>'
+        +'</div><button class="btn-ghost" style="font-size:11px;padding:3px 8px" onclick="deleteHubContact(\''+hub+'\',\''+esc(client)+'\','+i+')">Remove</button></div>'
+      ).join('')
+    : '<div style="font-size:12px;color:var(--text3);padding:4px 0">No contacts yet</div>';
 
   const linkedHtml = openIssues.length
-    ? `<div class="linked-issues">${openIssues.slice(0,8).map(i=>`<div class="li-row"><span style="font-family:monospace;font-size:11px;color:var(--text3)">${i.id}</span>${sb(i.status)}<span style="flex:1;font-size:12px">${escHtml(i.summary.substring(0,55))}</span>${pb(i.priority)}</div>`).join('')}</div>`
-    : '<div class="empty" style="padding:6px 0;font-size:12px">No open issues linked to this client</div>';
+    ? '<div class="linked-issues">'+openIssues.slice(0,8).map(i =>
+        '<div class="li-row"><span style="font-family:monospace;font-size:11px;color:var(--text3)">'+i.id+'</span>'
+        +sb(i.status)+'<span style="flex:1;font-size:12px">'+esc(i.summary.substring(0,55))+'</span>'+pb(i.priority)+'</div>'
+      ).join('')+'</div>'
+    : '<div class="empty" style="padding:6px 0;font-size:12px">No open issues matched for this client name</div>';
 
-  document.getElementById('hub-content-'+hub).innerHTML = `
-  <div class="client-card">
-    <div class="client-header">
-      <div>
-        <div class="client-name">${client}</div>
-        <div class="client-meta">${d.tier?'Tier: '+d.tier:''}</div>
-      </div>
-      <div style="text-align:right">
-        <div class="hub-section-title" style="margin-bottom:4px">Account health</div>
-        <div class="health-bar">
-          ${['green','amber','red'].map(h=>`<span class="health-pill ${healthColors[h]}${d.health===h?' health-active':''}" onclick="setHealth('${hub}','${client}','${h}')">${healthLabels[h]}</span>`).join('')}
-        </div>
-      </div>
-    </div>
+  const healthBtns = healthMap.map(h =>
+    '<span class="health-pill '+h.cls+(d.health===h.k?' health-active':'')+'"'
+    +' onclick="setHubHealth(\''+hub+'\',\''+esc(client)+'\',\''+h.k+'\')">'+h.label+'</span>'
+  ).join('');
 
-    <div style="margin-bottom:14px">
-      <div class="hub-section-title">Tier / Plan</div>
-      <input class="hub-input" placeholder="e.g. Enterprise, Premium…" value="${escHtml(d.tier||'')}" onchange="setHubField('${hub}','${client}','tier',this.value)">
-    </div>
+  el.innerHTML =
+    '<div class="client-card">'
+    +'<div class="client-header">'
+    +'<div><div class="client-name">'+esc(client)+'</div>'
+    +(d.tier?'<div class="client-meta">'+esc(d.tier)+'</div>':'')
+    +'</div>'
+    +'<div style="text-align:right">'
+    +'<div class="hub-section-title" style="margin-bottom:4px;justify-content:flex-end">Account health</div>'
+    +'<div class="health-bar">'+healthBtns+'</div>'
+    +'</div></div>'
 
-    <!-- Call Notes -->
-    <div class="hub-section">
-      <div class="hub-section-title">Call notes <span>logged in reverse order</span></div>
-      <div class="hub-row">
-        <textarea class="hub-textarea" id="note-input-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Log a call note…" rows="3"></textarea>
-      </div>
-      <div style="display:flex;gap:8px;margin-bottom:10px">
-        <button class="btn-primary" style="font-size:12px" onclick="addNote('${hub}','${client}')">Add note</button>
-      </div>
-      <div id="notes-list-${hub}-${client.replace(/\s+/g,'_')}">${notesHtml}</div>
-    </div>
+    +'<div style="margin-bottom:16px">'
+    +'<div class="hub-section-title">Tier / Plan</div>'
+    +'<input class="hub-input" placeholder="e.g. Enterprise, Premium…" value="'+esc(d.tier||'')+'"'
+    +' onchange="setHubField(\''+hub+'\',\''+esc(client)+'\',\'tier\',this.value)">'
+    +'</div>'
 
-    <!-- Action Points -->
-    <div class="hub-section">
-      <div class="hub-section-title">Action points</div>
-      <div class="hub-row">
-        <input class="hub-input" id="ap-text-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Action item…">
-        <input class="hub-input" style="width:130px;flex:none" type="date" id="ap-due-${hub}-${client.replace(/\s+/g,'_')}">
-        <input class="hub-input" style="width:120px;flex:none" id="ap-owner-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Owner">
-        <button class="btn-primary" style="white-space:nowrap;flex:none;font-size:12px" onclick="addAction('${hub}','${client}')">Add</button>
-      </div>
-      <div id="actions-list-${hub}-${client.replace(/\s+/g,'_')}">${actionsHtml}</div>
-    </div>
+    +'<div class="hub-section">'
+    +'<div class="hub-section-title">Call notes <span>— newest first</span></div>'
+    +'<textarea class="hub-textarea" id="note-in-'+hub+'" placeholder="Log a call note, decisions made, issues raised…" rows="3"></textarea>'
+    +'<button class="btn-primary" style="font-size:12px;margin-top:6px;margin-bottom:12px" onclick="addHubNote(\''+hub+'\',\''+esc(client)+'\')">Add note</button>'
+    +'<div id="notes-out-'+hub+'">'+notesHtml+'</div>'
+    +'</div>'
 
-    <!-- Contacts -->
-    <div class="hub-section">
-      <div class="hub-section-title">Key contacts</div>
-      <div class="hub-row" style="flex-wrap:wrap">
-        <input class="hub-input" id="ct-name-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Name" style="flex:1;min-width:100px">
-        <input class="hub-input" id="ct-role-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Role" style="flex:1;min-width:100px">
-        <input class="hub-input" id="ct-email-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Email" style="flex:1;min-width:120px">
-        <input class="hub-input" id="ct-phone-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Phone" style="flex:0 0 110px">
-        <button class="btn-primary" style="white-space:nowrap;flex:none;font-size:12px" onclick="addContact('${hub}','${client}')">Add</button>
-      </div>
-      <div id="contacts-list-${hub}-${client.replace(/\s+/g,'_')}">${contactsHtml}</div>
-    </div>
+    +'<div class="hub-section">'
+    +'<div class="hub-section-title">Action points</div>'
+    +'<div class="hub-row">'
+    +'<input class="hub-input" id="ap-txt-'+hub+'" placeholder="Action item…">'
+    +'<input class="hub-input" type="date" id="ap-due-'+hub+'" style="width:130px;flex:none">'
+    +'<input class="hub-input" id="ap-own-'+hub+'" placeholder="Owner" style="width:110px;flex:none">'
+    +'<button class="btn-primary" style="white-space:nowrap;flex:none;font-size:12px" onclick="addHubAction(\''+hub+'\',\''+esc(client)+'\')">Add</button>'
+    +'</div>'
+    +'<div id="actions-out-'+hub+'">'+actionsHtml+'</div>'
+    +'</div>'
 
-    <!-- Linked Issues -->
-    <div class="hub-section">
-      <div class="hub-section-title">Open issues <span>(matched from Jira import by client name)</span></div>
-      ${linkedHtml}
-    </div>
-  </div>
-  `;
+    +'<div class="hub-section">'
+    +'<div class="hub-section-title">Key contacts</div>'
+    +'<div class="hub-row" style="flex-wrap:wrap">'
+    +'<input class="hub-input" id="ct-nm-'+hub+'" placeholder="Name" style="flex:1;min-width:100px">'
+    +'<input class="hub-input" id="ct-rl-'+hub+'" placeholder="Role" style="flex:1;min-width:100px">'
+    +'<input class="hub-input" id="ct-em-'+hub+'" placeholder="Email" style="flex:1;min-width:130px">'
+    +'<input class="hub-input" id="ct-ph-'+hub+'" placeholder="Phone" style="flex:0 0 110px">'
+    +'<button class="btn-primary" style="white-space:nowrap;flex:none;font-size:12px" onclick="addHubContact(\''+hub+'\',\''+esc(client)+'\')">Add</button>'
+    +'</div>'
+    +'<div id="contacts-out-'+hub+'">'+contactsHtml+'</div>'
+    +'</div>'
+
+    +'<div class="hub-section">'
+    +'<div class="hub-section-title">Open issues <span>matched from Jira import by client name</span></div>'
+    +linkedHtml
+    +'</div>'
+
+    +'<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">'
+    +'<button class="btn-ghost" style="font-size:11px;color:var(--danger);border-color:var(--danger)" onclick="removeClient(\''+hub+'\',\''+esc(client)+'\')">Remove this client</button>'
+    +'</div>'
+    +'</div>';
 }
 
-function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function setHubHealth(hub,client,h){const d=getClientData(hub,client);d.health=h;saveState();renderClientHub(hub,client);}
+function setHubField(hub,client,field,val){const d=getClientData(hub,client);d[field]=val;saveState();}
 
-function setHealth(hub, client, h) {
-  const d = getHub(hub, client);
-  d.health = h;
+function addHubNote(hub,client){
+  const ta=document.getElementById('note-in-'+hub);
+  const text=(ta?ta.value:'').trim();
+  if(!text)return;
+  const d=getClientData(hub,client);
+  const now=new Date();
+  d.notes.push({text,date:now.toLocaleDateString(),time:now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});
+  ta.value='';
   saveState();
-  renderClientHub(hub, client);
-}
-
-function setHubField(hub, client, field, val) {
-  const d = getHub(hub, client);
-  d[field] = val;
-  saveState();
-}
-
-function addNote(hub, client) {
-  const k = client.replace(/\s+/g, '_');
-  const ta = document.getElementById('note-input-'+hub+'-'+k);
-  const text = ta.value.trim();
-  if (!text) return;
-  const d = getHub(hub, client);
-  const now = new Date();
-  d.notes.push({
-    text,
-    date: now.toLocaleDateString(),
-    time: now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
-  });
-  ta.value = '';
-  saveState();
-  renderClientHub(hub, client);
+  renderClientHub(hub,client);
   toast('Note added');
 }
+function deleteHubNote(hub,client,i){const d=getClientData(hub,client);d.notes.splice(i,1);saveState();renderClientHub(hub,client);}
 
-function deleteNote(hub, client, i) {
-  const d = getHub(hub, client);
-  d.notes.splice(i, 1);
+function addHubAction(hub,client){
+  const text=(document.getElementById('ap-txt-'+hub)||{value:''}).value.trim();
+  if(!text)return;
+  const due=(document.getElementById('ap-due-'+hub)||{value:''}).value;
+  const owner=(document.getElementById('ap-own-'+hub)||{value:''}).value.trim();
+  getClientData(hub,client).actions.push({text,due,owner,done:false,created:new Date().toLocaleDateString()});
+  ['ap-txt-','ap-due-','ap-own-'].forEach(p=>{const el=document.getElementById(p+hub);if(el)el.value='';});
   saveState();
-  renderClientHub(hub, client);
-}
-
-function addAction(hub, client) {
-  const k = client.replace(/\s+/g, '_');
-  const text = document.getElementById('ap-text-'+hub+'-'+k).value.trim();
-  if (!text) return;
-  const due = document.getElementById('ap-due-'+hub+'-'+k).value;
-  const owner = document.getElementById('ap-owner-'+hub+'-'+k).value.trim();
-  const d = getHub(hub, client);
-  d.actions.push({text, due, owner, done: false, created: new Date().toLocaleDateString()});
-  document.getElementById('ap-text-'+hub+'-'+k).value = '';
-  document.getElementById('ap-due-'+hub+'-'+k).value = '';
-  document.getElementById('ap-owner-'+hub+'-'+k).value = '';
-  saveState();
-  renderClientHub(hub, client);
+  renderClientHub(hub,client);
   toast('Action added');
 }
+function toggleHubAction(hub,client,i){const d=getClientData(hub,client);d.actions[i].done=!d.actions[i].done;saveState();renderClientHub(hub,client);}
+function deleteHubAction(hub,client,i){getClientData(hub,client).actions.splice(i,1);saveState();renderClientHub(hub,client);}
 
-function toggleAction(hub, client, i) {
-  const d = getHub(hub, client);
-  d.actions[i].done = !d.actions[i].done;
+function addHubContact(hub,client){
+  const name=(document.getElementById('ct-nm-'+hub)||{value:''}).value.trim();
+  if(!name)return;
+  const role=(document.getElementById('ct-rl-'+hub)||{value:''}).value.trim();
+  const email=(document.getElementById('ct-em-'+hub)||{value:''}).value.trim();
+  const phone=(document.getElementById('ct-ph-'+hub)||{value:''}).value.trim();
+  getClientData(hub,client).contacts.push({name,role,email,phone});
+  ['ct-nm-','ct-rl-','ct-em-','ct-ph-'].forEach(p=>{const el=document.getElementById(p+hub);if(el)el.value='';});
   saveState();
-  renderClientHub(hub, client);
-}
-
-function deleteAction(hub, client, i) {
-  const d = getHub(hub, client);
-  d.actions.splice(i, 1);
-  saveState();
-  renderClientHub(hub, client);
-}
-
-function addContact(hub, client) {
-  const k = client.replace(/\s+/g, '_');
-  const name = document.getElementById('ct-name-'+hub+'-'+k).value.trim();
-  if (!name) return;
-  const role = document.getElementById('ct-role-'+hub+'-'+k).value.trim();
-  const email = document.getElementById('ct-email-'+hub+'-'+k).value.trim();
-  const phone = document.getElementById('ct-phone-'+hub+'-'+k).value.trim();
-  const d = getHub(hub, client);
-  d.contacts.push({name, role, email, phone});
-  ['name','role','email','phone'].forEach(f => document.getElementById('ct-'+f+'-'+hub+'-'+k).value = '');
-  saveState();
-  renderClientHub(hub, client);
+  renderClientHub(hub,client);
   toast('Contact added');
 }
+function deleteHubContact(hub,client,i){getClientData(hub,client).contacts.splice(i,1);saveState();renderClientHub(hub,client);}
 
-function deleteContact(hub, client, i) {
-  const d = getHub(hub, client);
-  d.contacts.splice(i, 1);
-  saveState();
-  renderClientHub(hub, client);
-}
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 renderDashboard();
