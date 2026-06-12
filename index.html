@@ -1096,16 +1096,26 @@ function getHub(hub, client) {
 }
 
 function renderHub(hub) {
-  const clients = HUB_CLIENTS[hub];
-  // find active tab
-  const tabEl = document.querySelector(`#htabs-${hub} .hub-tab.active`);
-  const active = tabEl ? tabEl.textContent.trim() : clients[0];
-  renderClientHub(hub, active);
+  const clients = HUB_CLIENTS[hub] || [];
+  const tabsEl = document.getElementById('htabs-'+hub);
+  const active = (tabsEl && tabsEl.dataset.active) || clients[0] || '';
+  if (active) renderClientHub(hub, active);
 }
 
-function switchClient(hub, client, el) {
+function switchClient(hub, btnOrClient, el) {
+  let client, btn;
+  if (btnOrClient && typeof btnOrClient === 'object') {
+    btn = btnOrClient;
+    client = btn.textContent.trim();
+  } else {
+    client = btnOrClient;
+    btn = el;
+  }
+  if (!client) return;
   document.querySelectorAll(`#htabs-${hub} .hub-tab`).forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
+  if (btn) btn.classList.add('active');
+  const tabsEl = document.getElementById('htabs-'+hub);
+  if (tabsEl) tabsEl.dataset.active = client;
   renderClientHub(hub, client);
 }
 
@@ -1136,12 +1146,26 @@ function renderClientHub(hub, client) {
     ? `<div class="linked-issues">${openIssues.slice(0,8).map(i=>`<div class="li-row"><span style="font-family:monospace;font-size:11px;color:var(--text3)">${i.id}</span>${sb(i.status)}<span style="flex:1;font-size:12px">${escHtml(i.summary.substring(0,55))}</span>${pb(i.priority)}</div>`).join('')}</div>`
     : '<div class="empty" style="padding:6px 0;font-size:12px">No open issues linked to this client</div>';
 
+  const pressingHtml = (d.pressing||[]).length
+    ? (d.pressing||[]).slice().reverse().map((p, ri) => {
+        const i = d.pressing.length - 1 - ri;
+        const sevBadge = p.sev==='high' ? '<span class="badge bd" style="font-size:10px">High</span>' : p.sev==='low' ? '<span class="badge bnn" style="font-size:10px">Low</span>' : '<span class="badge bw" style="font-size:10px">Medium</span>';
+        return `<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;margin-bottom:6px">
+          <div style="flex:1">
+            <div style="font-size:13px;color:var(--text);margin-bottom:4px">${escHtml(p.text)}</div>
+            <div style="display:flex;align-items:center;gap:8px">${sevBadge}<span style="font-size:10px;color:var(--text3)">Added ${p.date}${p.time?' at '+p.time:''}</span></div>
+          </div>
+          <button class="abtn" style="flex-shrink:0;font-size:11px" onclick="resolvePI('${hub}','${client}',${i})">Resolve</button>
+          <span class="ap-del" onclick="deletePI('${hub}','${client}',${i})">✕</span>
+        </div>`;
+      }).join('')
+    : '<div class="empty" style="padding:8px 0;font-size:12px">No pressing issues logged</div>';
+
   document.getElementById('hub-content-'+hub).innerHTML = `
   <div class="client-card">
     <div class="client-header">
       <div>
         <div class="client-name">${client}</div>
-        <div class="client-meta">${d.tier?'Tier: '+d.tier:''}</div>
       </div>
       <div style="text-align:right">
         <div class="hub-section-title" style="margin-bottom:4px">Account health</div>
@@ -1151,9 +1175,19 @@ function renderClientHub(hub, client) {
       </div>
     </div>
 
-    <div style="margin-bottom:14px">
-      <div class="hub-section-title">Tier / Plan</div>
-      <input class="hub-input" placeholder="e.g. Enterprise, Premium…" value="${escHtml(d.tier||'')}" onchange="setHubField('${hub}','${client}','tier',this.value)">
+    <!-- Live Pressing Issues -->
+    <div class="hub-section">
+      <div class="hub-section-title">Live pressing issues <span>— auto-dated, resolve when done</span></div>
+      <div class="hub-row">
+        <input class="hub-input" id="pi-text-${hub}-${client.replace(/\s+/g,'_')}" placeholder="Describe the pressing issue…" style="flex:3">
+        <select class="hub-input" id="pi-sev-${hub}-${client.replace(/\s+/g,'_')}" style="width:100px;flex:none">
+          <option value="high">High</option>
+          <option value="medium" selected>Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <button class="btn-primary" style="white-space:nowrap;flex:none;font-size:12px" onclick="addPI('${hub}','${client}')">+ Add</button>
+      </div>
+      <div>${pressingHtml}</div>
     </div>
 
     <!-- Call Notes -->
@@ -1292,6 +1326,32 @@ function deleteContact(hub, client, i) {
   d.contacts.splice(i, 1);
   saveState();
   renderClientHub(hub, client);
+}
+
+function addPI(hub, client) {
+  const k = client.replace(/\s+/g, '_');
+  const txt = (document.getElementById('pi-text-'+hub+'-'+k)||{value:''}).value.trim();
+  if (!txt) return;
+  const sev = (document.getElementById('pi-sev-'+hub+'-'+k)||{value:'medium'}).value;
+  const d = getHub(hub, client);
+  if (!d.pressing) d.pressing = [];
+  const now = new Date();
+  d.pressing.push({text:txt, sev, date:now.toLocaleDateString(), time:now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});
+  const el = document.getElementById('pi-text-'+hub+'-'+k);
+  if (el) el.value = '';
+  saveState();
+  renderClientHub(hub, client);
+  toast('Pressing issue logged');
+}
+
+function resolvePI(hub, client, i) {
+  const d = getHub(hub, client);
+  if (d.pressing) { d.pressing.splice(i, 1); saveState(); renderClientHub(hub, client); toast('Issue resolved'); }
+}
+
+function deletePI(hub, client, i) {
+  const d = getHub(hub, client);
+  if (d.pressing) { d.pressing.splice(i, 1); saveState(); renderClientHub(hub, client); }
 }
 
 
