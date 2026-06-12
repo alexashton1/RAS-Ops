@@ -755,7 +755,6 @@ const state = {
   muManual: saved ? saved.muManual : [],
   manualChallenges: saved ? saved.manualChallenges : [],
   clientHubs: saved ? saved.clientHubs : {},
-  clientHubs: saved ? saved.clientHubs : {},
   csvHeaders: [],
   csvPending: [],
   openTpl: null,
@@ -1323,7 +1322,7 @@ const HUB_DEFAULTS = {
 };
 
 function getHubClients(hub){
-  return state.clientHubs['_list_'+hub] || HUB_DEFAULTS[hub] || [];
+  return state.clientHubs['list_'+hub] || HUB_DEFAULTS[hub] || [];
 }
 
 function getClientData(hub, client) {
@@ -1351,6 +1350,7 @@ function renderHub(hub) {
 }
 
 function switchClient(hub, btn) {
+  if (!btn || typeof btn.textContent === 'undefined') return;
   const client = btn.textContent.trim();
   const tabsEl = document.getElementById('htabs-'+hub);
   if (tabsEl) {
